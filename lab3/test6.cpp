@@ -5,8 +5,9 @@ using namespace std;
 
 #define PORT_NUM        20130
 #define IP_NUM          "127.0.0.1"
+#define BUF2_NUM        65535
 
-int main() {
+int main(){
     int s = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if(s < 0) {
         cerr << "Socket Creation Error" << endl;
@@ -24,6 +25,22 @@ int main() {
     int numBytes = sendto(s, buf.c_str(), buf.length(), 0, (struct sockaddr *) &sin, sizeof(sin));
     cout << "Sent : " << numBytes << endl;
 
+    char buf2[BUF2_NUM];
+    memset(&sin, 0, sizeof(sin));
+    socklen_t sin_size = sizeof(sin);
+    numBytes = recvfrom(s, buf2, sizeof(buf2), 0, (struct sockaddr *) &sin, &sin_size);
+
+    cout << "Received: " << numBytes << endl;
+    cout << "From " << inet_ntoa(sin.sin_addr) << endl;
+
+    memset(&sin, 0, sizeof(sin));
+    sin_size = sizeof(sin);
+    int result = getsockname(s, (struct sockaddr *) &sin, &sin_size);
+
+    if(result == 0) {
+        cout << "My addr: " << inet_ntoa(sin.sin_addr) << endl;
+        cout << "My port: " << ntohs(sin.sin_port) << endl;
+    }
+
     close(s);
-    return 0;
 }

@@ -3,9 +3,9 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-#define PORT_NUM        10001
+#define PORT_NUM        20130
 #define IP_NUM          "127.0.0.1"
-#define BUF2_BYTES      65536
+#define BUF2_BYTES      65535
 
 int main() {
     int s = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
