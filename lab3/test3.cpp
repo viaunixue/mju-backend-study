@@ -13,7 +13,7 @@ int main() {
         return 1;
     }
 
-    string buf = "Hello World";
+    string buf = "Hello World from test 3";
 
     struct sockaddr_in sin;
     memset(&sin, 0, sizeof(sin));

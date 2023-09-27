@@ -14,7 +14,7 @@ int main(){
         return 1;
     }
 
-    string buf = "Hello World";
+    string buf = "Hello World from test 6";
 
     struct sockaddr_in sin;
     memset(&sin, 0, sizeof(sin));
@@ -33,7 +33,7 @@ int main(){
     cout << "Received: " << numBytes << endl;
     cout << "From " << inet_ntoa(sin.sin_addr) << endl;
 
-    memset(&sin, 0, sizeof(sin));
+    // memset(&sin, 0, sizeof(sin));
     sin_size = sizeof(sin);
     int result = getsockname(s, (struct sockaddr *) &sin, &sin_size);
 

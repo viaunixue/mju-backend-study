@@ -14,17 +14,18 @@ int main(){
         return 1;
     }
 
-    string buf = "Hello World";
+    string buf = "Hello World from test 7";
 
     struct sockaddr_in sin;
     memset(&sin, 0, sizeof(sin));
     sin.sin_family = AF_INET;
     sin.sin_port = htons(PORT_NUM);
     sin.sin_addr.s_addr = INADDR_ANY;
-    if(bind(s, (struct sockaddr *) &sin, sizeof(sin)) < 0){
-        cerr << strerror(errno) << endl;
-        return 1; 
-    }
+    // if(bind(s, (struct sockaddr *) &sin, sizeof(sin)) < 0){
+    //     cerr << strerror(errno) << endl;
+    //     return 1; 
+    // } 
+    // -> test8 UDP 서버에서 binding 처리
 
     int numBytes = sendto(s, buf.c_str(), buf.length(), 0, (struct sockaddr *) &sin, sizeof(sin));
     if(numBytes < 0){

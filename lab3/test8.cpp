@@ -28,6 +28,7 @@ int main() {
 
     while(true){
         char buf2[BUF2_NUM];
+        memset(buf2, 0, sizeof(buf2));
         struct sockaddr_in clientAddr;
         socklen_t clientAddrLen = sizeof(clientAddr);
         int receivedBytes = recvfrom(s, buf2, sizeof(buf2), 0, (struct sockaddr *) &clientAddr, &clientAddrLen);
