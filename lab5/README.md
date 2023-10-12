@@ -485,10 +485,81 @@ int main(){
     close(clientSock);
     close(passiveSock);
 }
+// result
+// Received: 1024bytes, clientSock4
+// Sent: 1024
 ```
+* `PassiveSock` 과 `ActiveSock`을 구분하여 소켓 생성부터 `bind(), listen()`까지 `Passive Socket`을 사용하고 <br>
+`accept()` 함수에서 `Passive Socket`을 통해 `ClientSock` 즉, `Active Socket`을 생성합니다. <br>
+해당 `Active Socket`을 통해 Client와 데이터를 주고 받을 수 있습니다.
+* test7에서 데이터를 받아 TCP 서버가 정상적으로 작동함을 확인할 수 있었습니다. 
 
 ## `Test #11` 
 ### 여러 클라이언트를 위한 서버
 ```c++
+#include <arpa/inet.h>
+#include <errno.h>
+#include <string.h>
+#include <sys/socket.h>
+#include <unistd.h>
+#include <iostream>
 
+using namespace std;
+
+int main() {
+    int passiveSock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+
+    struct sockaddr_in sin;
+    memset(&sin, 0, sizeof(sin));
+    sin.sin_family = AF_INET;
+    sin.sin_addr.s_addr = INADDR_ANY;
+    sin.sin_port = htons(20000 + 130);
+    if(bind(passiveSock, (struct sockaddr *) &sin, sizeof(sin)) < 0){
+        cerr << "bind() failed: " << strerror(errno) << endl;
+        return 1;
+    }
+
+    if(listen(passiveSock, 10) < 0){
+        cerr << "listen() failed: " << strerror(errno) << endl;
+        return 1;
+    }
+
+    while(true){
+        memset(&sin, 0, sizeof(sin));
+        unsigned int sin_len = sizeof(sin);
+        int clientSock = accept(passiveSock, (struct sockaddr *) &sin, &sin_len);
+        if (clientSock < 0){
+            cerr << "accept() failed: " << strerror(errno) << endl;
+            return 1;
+        }
+
+        char buf[65535];
+        int numRecv = recv(clientSock, buf, sizeof(buf), 0);
+        if (numRecv == 0){
+            cout << "Socket closed: " << clientSock << endl;
+        } else if (numRecv < 0) {
+            cout << "recv() failed: " << strerror(errno) << endl;
+        } else {
+            cout << "Received: " << numRecv << "bytes, clientSock " << clientSock << endl;
+        }
+
+        int offset = 0;
+        while(offset < numRecv){
+            int numSend = send(clientSock, buf + offset, numRecv - offset, 0);
+            if(numSend < 0){
+                cerr << "send() failed: " << strerror(errno) << endl;
+            } else {
+                cout << "Sent: " << numSend << endl;
+                offset += numSend;
+            } 
+        }
+        close(clientSock);
+    }
+
+    close(passiveSock);
+}
 ```
+* `test 10` 코드는 하나의 Client 만 서비스하고 프로그램이 종료됩니다. <br>
+저는 `test 11` 코드에서 `while`문은 `accept` 단계부터 반복문을 진행하여 여러 `Client`를 서비스할 수 있도록 하였습니다.
+* 이렇게 코드를 작성하여 서버에 배포하게 되면 심각한 문제가 발생합니다. 어떤 문제가 발생하는지 고민해보았습니다. <br>
+&rarr; [test11.cpp 코드에서 발생하는 문제점](https://github.com/almond0115/mju-backend-dev/blob/main/lab5/test11.txt)

@@ -16,4 +16,4 @@
 * [[INFO] 종료 코드 컨벤션 제대로 알기](https://github.com/almond0115/mju-backend-dev/blob/main/study/return.md)
 * [[INFO] 동시에 열 수 있는 descriptor 수 조정](https://github.com/almond0115/mju-backend-dev/blob/main/study/ulimit.md)
 * [[REFACTOR] Message Handler](https://github.com/almond0115/mju-backend-dev/blob/main/study/messageHandler/README.md)
-* [[REVIEW] 퀴즈 정리](https://github.com/almond0115/mju-backend-dev/blob/main/study/quiz/231004.md)
+* [[REVIEW] 10/4 퀴즈 정리](https://github.com/almond0115/mju-backend-dev/blob/main/study/quiz/231004.md)
