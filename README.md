@@ -11,7 +11,7 @@
 * LAB-5 : [소켓 프로그래밍 #2 (TCP)](https://github.com/almond0115/mju-backend-dev/blob/main/lab5/README.md)
 
 ## 🤔 공부 기록 
-* [[INFO] Socket Options](https://github.com/almond0115/mju-backend-dev/blob/main/study/socket-options/README.md)
+* [[INFO] Socket Options](https://github.com/almond0115/mju-backend-dev/blob/main/study/socket%20options/README.md)
 * [[INFO] Nagle's Algorithm](https://github.com/almond0115/mju-backend-dev/blob/main/study/nagle.md)
 * [[INFO] 에러 관련 함수 및 주요 에러 코드](https://github.com/almond0115/mju-backend-dev/blob/main/study/error.md)
 * [[INFO] 종료 코드 컨벤션 제대로 알기](https://github.com/almond0115/mju-backend-dev/blob/main/study/return.md)
