@@ -11,10 +11,11 @@
 * LAB-5 : [소켓 프로그래밍 #2 (TCP)](https://github.com/almond0115/mju-backend-dev/blob/main/lab5/README.md)
 
 ## 🤔 공부 기록 
-* [[INFO] Socket Options](https://github.com/almond0115/mju-backend-dev/blob/main/study/socket%20options/README.md)
+* [[INFO] I/O Multiplexing](https://github.com/almond0115/mju-backend-dev/blob/main/study/IO/README.md)
+* [[INFO] Socket Options](https://github.com/almond0115/mju-backend-dev/blob/main/study/socket_options/README.md)
 * [[INFO] Nagle's Algorithm](https://github.com/almond0115/mju-backend-dev/blob/main/study/nagle.md)
 * [[INFO] 에러 관련 함수 및 주요 에러 코드](https://github.com/almond0115/mju-backend-dev/blob/main/study/error.md)
 * [[INFO] 종료 코드 컨벤션 제대로 알기](https://github.com/almond0115/mju-backend-dev/blob/main/study/return.md)
 * [[INFO] 동시에 열 수 있는 descriptor 수 조정](https://github.com/almond0115/mju-backend-dev/blob/main/study/ulimit.md)
-* [[REFACTOR] Message Handler](https://github.com/almond0115/mju-backend-dev/blob/main/study/messageHandler/README.md)
+* [[REFACTOR] Message Handler](https://github.com/almond0115/mju-backend-dev/blob/main/study/message_handler/README.md)
 * [[REVIEW] 10/4 퀴즈 정리](https://github.com/almond0115/mju-backend-dev/blob/main/study/quiz/231004.md)
