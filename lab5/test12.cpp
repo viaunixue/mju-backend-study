@@ -12,7 +12,7 @@ int main() {
     int passiveSock = socket(AF_INET, SOCK_STREAM, 0);
 
     int on = 1;
-    if(setsockopt(passiveSock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on))){
+    if(setsockopt(passiveSock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0){
         cerr << "setsock() failed: " << strerror(errno) << endl;
         return 1;
     }

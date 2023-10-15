@@ -13,9 +13,12 @@ setsockopt (sock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
 ```
 * bind() 는 특정 L4 타입에 대해서 <IP, Port> 쌍이 사용 중이 아닐 경우만 가능합니다. 
 * OS는 한 번 `bind`했던 것을 바로 사용 가능한 것으로 해제하지 않을 수 있습니다. <br>
-이는 서버를 리부팅 했는데 bind()를 실패하는 경우가 생길 수도 있음을 의미합니다. <br>
+이는 서버를 리부팅 했는데 bind()를 실패하는 경우가 생길 수도 있음을 의미합니다. <br><br>
+
+<img width="1293" alt="스크린샷 2023-10-15 17 38 31" src="https://github.com/mjubackend/io_multiplexing/assets/77084379/3c8b5ab4-c525-4d49-b74b-2153bac0ab77">
+
 ```
-만약 1000번 포트를 bind 하는데 만약 서버가 죽었을 때 서버를 다시 띄우면 바로 bind 못하는 경우도 존재합니다. 
+만약 20130번 포트를 bind 하는데 만약 서버가 죽었을 때 서버를 다시 띄우면 바로 bind 못하는 경우도 존재합니다. 
 왜냐하면 TCP 같은 경우 이미 다른 Client와 통신한 적이 있을 수 있습니다. (1000번 포트로 어떤 데이터가 날아오고 있을 수도 있다는 뜻)
 그렇기 때문에 `bind`를 바로 못하도록 OS에서 막도록 되어 있습니다.
 ``` 
@@ -106,13 +109,16 @@ int main() {
 // Sent: 1024
 // ^C
 ```
+<img width="1295" alt="스크린샷 2023-10-15 17 44 08" src="https://github.com/mjubackend/io_multiplexing/assets/77084379/ce6383c5-3016-4780-8826-3c3094991508">
+
+
 * 아래의 결과 값은 test7 값을 receive 한 결과 입니다. <br>
 getsockopt 값이 출력될 수 있는 이유는 `SO_REUSEADDR`을 사용하였기 때문입니다. <br>
 &rarr; **`직접 TCP 서버를 만들 때에는 거의 반드시 사용해야 하는 옵션입니다.`** <br>
 <br>
 
 <details>
-   <summary> <strong>이미 `bind()` 한 프로세스가 떠 있는데, 두 번째 프로세스가 똑같은 IP, port를 bind() 한다고 해보자.
+   <summary> <strong>이미 `bind()` 한 프로세스가 떠 있는데, 두 번째 프로세스가 똑같은 IP, port를 bind() 한다고 해보자. <br>
 이제 두 프로세스가 모두 bind()를 하고 있는 상황이 되었다. 이 경우 어떤 쪽이 새 TCP 연결을 받게 될까?</strong> </summary>
 
 &rarr; 알 수 없습니다. <br>
@@ -127,7 +133,7 @@ getsockopt 값이 출력될 수 있는 이유는 `SO_REUSEADDR`을 사용하였�
 int on = 1;
 setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on));
 ```
-* `Nagle's algorithm` 은 작은 데이터를 바로바로 보내지 않고 잠깐 기다리면서 모아뒀다가 합쳐서 보내게 됩니다.
+* [Nagle's Algorithm](https://github.com/almond0115/mju-backend-dev/blob/main/study/nagle.md) 은 작은 데이터를 바로바로 보내지 않고 잠깐 기다리면서 모아뒀다가 합쳐서 보내게 됩니다.
 * **이 때문에 `latency`를 증가시킬 수 있다.**
 &rarr; Interactive 한 app 일 경우 이는 문제가 됩니다. (ex. RPG 캐릭터의 움직임) 
 * `TCP_NODELAY` 옵션을 켜면 `Nagle's algorithm` 을 끈다는 의미입니다.
