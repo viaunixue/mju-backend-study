@@ -560,6 +560,6 @@ int main() {
 }
 ```
 * `test 10` 코드는 하나의 Client 만 서비스하고 프로그램이 종료됩니다. <br>
-저는 `test 11` 코드에서 `while`문은 `accept` 단계부터 반복문을 진행하여 여러 `Client`를 서비스할 수 있도록 하였습니다.
+저는 `test 11` 코드에서 `while`문의 `accept` 단계부터 반복문을 진행하여 여러 `Client`를 서비스할 수 있도록 하였습니다.
 * 이렇게 코드를 작성하여 서버에 배포하게 되면 심각한 문제가 발생합니다. 어떤 문제가 발생하는지 고민해보았습니다. <br>
 &rarr; [test11.cpp 코드에서 발생하는 문제점](https://github.com/almond0115/mju-backend-dev/blob/main/lab5/test11.txt)

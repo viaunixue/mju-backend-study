@@ -272,7 +272,8 @@ blocking 함수가 아니라 Non-blocking 함수입니다.
 
 #### 서버는 통상 실무적으로 대략 `50% ~ 70%` CPU 사용률을 목표로 합니다.
 
-(명령어 `top`을 통해 다음 화면을 확인할 수 있습니다)
+(명령어 `top`을 통해 다음 화면을 확인할 수 있습니다) <br>
+
 <img width="659" alt="스크린샷 2023-10-15 21 07 14" src="https://github.com/mjubackend/io_multiplexing/assets/77084379/2c7d1370-ade7-4005-91c4-27e608c1aa41">
 * `%CPU`는 한 코어 개수를 기준으로 나옵니다.
 ```
