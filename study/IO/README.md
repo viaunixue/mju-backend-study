@@ -275,7 +275,10 @@ blocking 함수가 아니라 Non-blocking 함수입니다.
 (명령어 `top`을 통해 다음 화면을 확인할 수 있습니다) <br>
 
 <img width="659" alt="스크린샷 2023-10-15 21 07 14" src="https://github.com/mjubackend/io_multiplexing/assets/77084379/2c7d1370-ade7-4005-91c4-27e608c1aa41">
+<br>
+
 * `%CPU`는 한 코어 개수를 기준으로 나옵니다.
+
 ```
 만약 코어 2개라고 한다면 50% 해당하는 프로세스는 100%가 나옵니다
 ```
