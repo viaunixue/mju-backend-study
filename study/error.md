@@ -9,7 +9,7 @@
     * `#include <errno.h>` 필요
     * `thread-safe` 합니다. (즉, 멀티 쓰레드 환경에서도 정상 작동)
 * 에러 코드 문자화 함수 `strerror()`
-    * `#include <string.h` 필요
+    * `#include <string.h>` 필요
     * 매개 변수로 주어지는 에러 코드에 대응되는 문자열을 반환합니다.
 * 에러 코드 출력 함수 `perror()`
     * `#include <stdio.h>` 필요
