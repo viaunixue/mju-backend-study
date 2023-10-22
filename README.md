@@ -12,7 +12,7 @@
 * LAB-6 : [멀티쓰레드 프로그래밍](https://github.com/almond0115/mju-backend-dev/blob/main/lab6/README.md)
 
 ## 🤔 공부 기록 
-* [[10/16] Multi Threading](https://github.com/almond0115/mju-backend-dev/blob/main/study/multi_threading.md)
+* [[10/17] Multi Threading](https://github.com/almond0115/mju-backend-dev/blob/main/study/multi_threading.md)
 * [[10/15] I/O Multiplexing과 Non-blocking I/O](https://github.com/almond0115/mju-backend-dev/blob/main/study/IO/README.md)
 * [[10/13] Socket Options](https://github.com/almond0115/mju-backend-dev/blob/main/study/socket_options.md)
 * [[10/13] Nagle's Algorithm](https://github.com/almond0115/mju-backend-dev/blob/main/study/nagle.md)

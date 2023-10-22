@@ -283,7 +283,7 @@ blocking 함수가 아니라 Non-blocking 함수입니다.
 만약 코어 2개라고 한다면 50% 해당하는 프로세스는 100%가 나옵니다
 ```
 
-### [lab5_test10_with_nonblocking.cpp](https://github.com/almond0115/mju-backend-dev/blob/main/study/IO/io_multiplexing/lab5_test10_with_nonblocking.cpp) 
+### [lab5_test10_with_nonblocking.cpp](https://github.com/almond0115/mju-backend-dev/blob/main/study/IO/non_blocking/lab5_test10_with_nonblocking.cpp) 
 &rarr; TCP server를 non-blocking socket 으로 변경했습니다. <br>
 &rarr; test7.cpp의 send() 함수 앞에 sleep(3); 코드를 두면 동작 확인이 가능합니다.
 
