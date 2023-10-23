@@ -25,31 +25,131 @@
 ## 📖 개념 시각화
  
 <details>
-   <summary> <h4> &nbsp; 백엔드 프로그래밍 OVERVIEW </h4> </summary>
+   <summary>  <a> &nbsp; 백엔드 프로그래밍 OVERVIEW </a>  </summary>
    <img src = "https://github.com/mjubackend/io_multiplexing/assets/77084379/179e01a1-9210-4bac-9798-a3e2c23321ae">
 </details>
 
 <details>
-   <summary> <h4> &nbsp; TCP/IP에서 OSI 모델 적용 </h4> </summary>
-   <img src = "asset/img/OSI Model.png">
+   <summary> <a> &nbsp; Hour Glass </a> </summary>
+   <img src = "asset/img/week_1/Hour glass.png">
 </details>
 
 <details>
-   <summary> <h4> &nbsp; 네트워크 간 게이트웨이 이동 </h4> </summary>
-   <img src = "asset/img/Network_gateway.png">
+   <summary> <a>  &nbsp; TCP/IP에서 OSI 모델 적용</a> </summary>
+   <img src = "asset/img/week_1/OSI Model.png">
 </details>
 
 <details>
-   <summary> <h4> &nbsp; DNS Resolution </h4> </summary>
-   <img src = "asset/img/DNS Resolution.png">
+   <summary> <a> &nbsp; 네트워크 간 게이트웨이 이동</a> </summary>
+   <img src = "asset/img/week_1/Network_gateway.png">
 </details>
 
 <details>
-   <summary> <h4> &nbsp; IP에서 MAC 알아내기 (ARP) </h4> </summary>
-   <img src = "asset/img/ARP.png">
+   <summary> <a> &nbsp; DNS Resolution</a> </summary>
+   <img src = "asset/img/week_1/DNS Resolution.png">
 </details>
 
 <details>
-   <summary> <h4> &nbsp; IP에서 MAC 알아내기 (ARP) </h4> </summary>
-   <img src = "asset/img/ARP.png">
+   <summary> <a> &nbsp; IP에서 MAC 알아내기 (ARP) </a> </summary>
+   <img src = "asset/img/week_1/ARP.png">
+</details>
+
+<details>
+   <summary> <a> &nbsp; Hypervisor CPU 가상화 </a> </summary>
+   <img src = "asset/img/week_2/Hypervisor.png">
+</details>
+
+<details>
+   <summary> <a> &nbsp; Local DNS </a> </summary>
+   <img src = "asset/img/week_2/LocalDNS.png">
+</details>
+
+<details>
+   <summary> <a> &nbsp; Network Socket Library </a> </summary>
+   <img src = "asset/img/week_3/NetworkSocketLibrary.png">
+</details>
+
+<details>
+   <summary> <a> &nbsp; UDP / TCP client, server 별 함수 흐름 </a> </summary>
+   <img src = "asset/img/week_3/SocketFunc.png">
+</details>
+
+<details>
+   <summary> <a> &nbsp; UDP / TCP 네트워크 흐름 </a> </summary>
+   <img src = "asset/img/week_3/SocketNetwork.png">
+</details>
+
+<details>
+   <summary> <a> &nbsp; 메세지 포맷팅 </a> </summary>
+   <img src = "asset/img/week_4/MessageFormat.png">
+</details>
+
+<details>
+   <summary> <a> &nbsp; Sendto() 함수의 동작 </a> </summary>
+   <img src = "asset/img/week_4/SendtoFunc.png">
+</details>
+
+<details>
+   <summary> <a> &nbsp; TCP Client, Server 코드 흐름 </a> </summary>
+   <img src = "asset/img/week_4/TCPFunc.png">
+</details>
+
+<details>
+   <summary> <a> &nbsp; UDP Client, Server 코드 흐름 </a> </summary>
+   <img src = "asset/img/week_4/UDPFunc.png">
+</details>
+
+<details>
+   <summary> <a> &nbsp; Passive Socket과 Active Socket </a> </summary>
+   <img src = "asset/img/week_5/PassiveActiveSocket.png">
+</details>
+
+<details>
+   <summary> <a> &nbsp; select() 함수 이벤트 종류와 fd_set </a> </summary>
+   <img src = "asset/img/week_5/selectFunc.png">
+</details>
+
+<details>
+   <summary> <a> &nbsp; Socket Options </a> </summary>
+   <img src = "asset/img/week_5/SocketOptions.png">
+</details>
+
+<details>
+   <summary> <a> &nbsp; TCP, UDP 데이터 전송 </a> </summary>
+   <img src = "asset/img/week_5/TCPUDPTransfer.png">
+</details>
+
+<details>
+   <summary> <a> &nbsp; 순차적, 동시성, 병렬성 흐름 </a> </summary>
+   <img src = "asset/img/week_6/Concurrency.png">
+</details>
+
+<details>
+   <summary> <a> &nbsp; 멀티 태스킹 OS 에서의 Process Life Cycle </a> </summary>
+   <img src = "asset/img/week_6/MultiTasking.png">
+</details>
+
+<details>
+   <summary> <a> &nbsp; 싱글 쓰레드 vs 멀티 쓰레드 </a> </summary>
+   <img src = "asset/img/week_6/MultiThread.png">
+</details>
+
+<details>
+   <summary> <a> &nbsp; notify_one() / notify_all() </a> </summary>
+   <img src = "asset/img/week_6/notifyOne.png">
+</details>
+
+<details>
+   <summary> <a> &nbsp; Task Queue + Workers Pool </a> </summary>
+   <img src = "asset/img/week_6/TaskQueue.png">
+</details>
+
+<details>
+   <summary> <a> &nbsp; 쓰레드에서 join() 함수</a> </summary>
+   <img src = "asset/img/week_6/ThreadJoin.png">
+</details>
+
+<details>
+   <summary> <a> &nbsp; User Level 쓰레드 vs Kernel Level 쓰레드 </a> </summary>
+   <img src = "asset/img/week_6/UserKernelLevel.png">
 </details>
