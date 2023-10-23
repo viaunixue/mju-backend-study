@@ -28,4 +28,6 @@ int main() {
         m2.unlock();
         m.unlock();
     }
+    t.join();
+    cout << "Sum: " << sum << endl;
 }
