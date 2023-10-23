@@ -25,7 +25,31 @@
 ## 📖 개념 시각화
  
 <details>
-   <summary> <h3> &nbsp; 백엔드 프로그래밍 OVERVIEW </h3> </summary>
+   <summary> <h4> &nbsp; 백엔드 프로그래밍 OVERVIEW </h4> </summary>
    <img src = "https://github.com/mjubackend/io_multiplexing/assets/77084379/179e01a1-9210-4bac-9798-a3e2c23321ae">
+</details>
 
+<details>
+   <summary> <h4> &nbsp; TCP/IP에서 OSI 모델 적용 </h4> </summary>
+   <img src = "asset/img/OSI Model.png">
+</details>
+
+<details>
+   <summary> <h4> &nbsp; 네트워크 간 게이트웨이 이동 </h4> </summary>
+   <img src = "asset/img/Network_gateway.png">
+</details>
+
+<details>
+   <summary> <h4> &nbsp; DNS Resolution </h4> </summary>
+   <img src = "asset/img/DNS Resolution.png">
+</details>
+
+<details>
+   <summary> <h4> &nbsp; IP에서 MAC 알아내기 (ARP) </h4> </summary>
+   <img src = "asset/img/ARP.png">
+</details>
+
+<details>
+   <summary> <h4> &nbsp; IP에서 MAC 알아내기 (ARP) </h4> </summary>
+   <img src = "asset/img/ARP.png">
 </details>
