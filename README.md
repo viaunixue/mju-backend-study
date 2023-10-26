@@ -12,15 +12,17 @@
 * LAB-6 : [멀티쓰레드 프로그래밍](https://github.com/almond0115/mju-backend-dev/blob/main/lab6/README.md)
 
 ## 🤔 공부 기록 
+* [[10/26] Producer-Consumer Problem](https://github.com/almond0115/mju-backend-dev/blob/main/study/producer_consumer/README.md)
+* [[10/24] 10/23 Midterm-exam Review](https://github.com/almond0115/mju-backend-dev/blob/main/study/exam/midterm.md)
 * [[10/17] Multi Threading](https://github.com/almond0115/mju-backend-dev/blob/main/study/multi_threading.md)
 * [[10/15] I/O Multiplexing과 Non-blocking I/O](https://github.com/almond0115/mju-backend-dev/blob/main/study/IO/README.md)
 * [[10/13] Socket Options](https://github.com/almond0115/mju-backend-dev/blob/main/study/socket_options.md)
 * [[10/13] Nagle's Algorithm](https://github.com/almond0115/mju-backend-dev/blob/main/study/nagle.md)
-* [[10/10] 에러 관련 함수 및 주요 에러 코드](https://github.com/almond0115/mju-backend-dev/blob/main/study/error.md)
-* [[10/10] 종료 코드 컨벤션 제대로 알기](https://github.com/almond0115/mju-backend-dev/blob/main/study/return.md)
-* [[10/10] 동시에 열 수 있는 descriptor 수 조정](https://github.com/almond0115/mju-backend-dev/blob/main/study/ulimit.md)
+* [[10/10] Error-related functions and major error codes](https://github.com/almond0115/mju-backend-dev/blob/main/study/error.md)
+* [[10/10] Exit Code Convention](https://github.com/almond0115/mju-backend-dev/blob/main/study/return.md)
+* [[10/10] Adjust the number of descriptors that can be opened simultaneously](https://github.com/almond0115/mju-backend-dev/blob/main/study/ulimit.md)
 * [[10/8] Message Handler](https://github.com/almond0115/mju-backend-dev/blob/main/study/message_handler/README.md)
-* [[10/5] 10/4 퀴즈 정리](https://github.com/almond0115/mju-backend-dev/blob/main/study/quiz/231004.md)
+* [[10/5] 10/4 Quiz Review](https://github.com/almond0115/mju-backend-dev/blob/main/study/quiz/231004.md)
 
 ## 📖 개념 시각화
  

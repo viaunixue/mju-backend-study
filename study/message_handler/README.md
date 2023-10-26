@@ -15,6 +15,6 @@
 
 * [[C++] Before / After 코드](https://github.com/almond0115/mju-backend-dev/blob/main/study/messageHandler/c++/README.md) 
 
-* [[Python] Before / After 코드](https://github.com/almond0115/mju-backend-dev/blob/main/study/messageHandler/python/README.md)
+* [[Python] Before / After 코드](https://github.com/almond0115/mju-backend-dev/blob/main/study/message_handler/python/README.md)
 
 
