@@ -1,0 +1,103 @@
+syntax = "proto2";
+
+package mju;
+
+// Protobuf 는 parseFromString() 처럼 문자열로부터 객체를 생성할 수 있는 기능을 제공한다.
+// 그러나 먼저 "어떤 protobuf 메시지 타입" 이 들어온 것인지를 알아야 해당 메시지의 parseFromString() 을 호출할 수 있다.
+
+// 이를 해결할 수 있는 방법은 두 가지가 있는데,
+// 1. 오로지 타입 정보만 담고 있는 protobuf message type 을 먼저 정의하고 모든 메시지 앞에 그걸 먼저 보내는 방법
+// 2. protobuf 의 extension 기능을 이용해서, 모든 protobuf 가 동일한 message type 을 따르게 하는 방법이 있다.
+
+// 후자는 수업 시간에 다루지 않았기 때문에 전자로 작성해본다.
+// 즉 이제 서버-클라이언트 메시지는 타입 정보를 담고 있는 TypeMessage 가 가고, 그 뒤에 그 Type 에 따른 특정 메시지 (예: NameMessage) 가 간다.
+
+message Type {
+  enum MessageType {
+    // CS_ 라는 prefix 는 client -> server 메시지임을 구분하기 위해서 썼다.
+    CS_NAME = 0;
+    CS_ROOMS = 1;
+    CS_CREATE_ROOM = 2;
+    CS_JOIN_ROOM = 3;
+    CS_LEAVE_ROOM = 4;
+    CS_CHAT = 5;
+    CS_SHUTDOWN = 6;
+
+    // SC_ 라는 prefix 는 server -> client 메시지임을 구분하기 위해서 썼다.
+    SC_ROOMS_RESULT = 7;
+    SC_CHAT = 8;
+    SC_SYSTEM_MESSAGE = 9;
+  }
+
+  required MessageType type = 1;
+}
+
+message CSName {
+  required string name = 1;
+}
+
+message CSRooms {
+}
+
+message CSCreateRoom {
+  // 방 제목
+  optional string title = 1;
+}
+
+message CSJoinRoom {
+  required int32 roomId = 1;
+}
+
+message CSLeaveRoom {
+}
+
+message CSChat {
+  required string text = 1;
+}
+
+message CSShutdown {
+}
+
+message SCNameResult {
+  optional string error = 1;
+}
+
+message SCRoomsResult {
+  // 각 room 에 대한 정보를 가지고 있다.
+  message RoomInfo {
+    // room 을 구분하기 위한 식별자
+    required int32 roomId = 1;
+
+    // 방 제목
+    optional string title = 2;
+
+    // room 에 들어간 사람 수
+    repeated string members = 3;
+  }
+
+  // 위에 nested 형태로 정의된 RoomInfo 를 room 개수 별로 보낸다.
+  repeated RoomInfo rooms = 1;
+}
+
+message SCCreateRoomResult {
+  optional string error = 1;
+}
+
+message SCJoinRoomResult {
+  optional string error = 1;
+}
+
+message SCLeaveRoomResult {
+  optional string error = 1;
+}
+
+message SCChat {
+  // 채팅 메시지를 보낸 사람
+  required string member = 1;
+
+  required string text = 2;
+}
+
+message SCSystemMessage {
+  required string text = 1;
+}
