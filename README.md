@@ -4,6 +4,9 @@
 * 이름 : 정종현
 * 학번 : 60162176
 
+## 📚 미니 프로젝트
+* [채팅 서버 만들기](https://github.com/almond0115/mju-backend-dev/blob/main/chat_server/README.md)
+
 ## 📝 과제 정리
 * LAB-2 : [IaaS 및 네트워크 개요 (AWS)](https://github.com/almond0115/mju-backend-dev/blob/main/lab2/README.md)
 * LAB-3 : [소켓 프로그래밍 #1 (UDP)](https://github.com/almond0115/mju-backend-dev/blob/main/lab3/README.md)
