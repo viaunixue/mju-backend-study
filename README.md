@@ -13,8 +13,12 @@
 * LAB-4 : [메세지 포맷팅 (Protobuf, JSON)](https://github.com/almond0115/mju-backend-dev/blob/main/lab4/README.md)
 * LAB-5 : [소켓 프로그래밍 #2 (TCP)](https://github.com/almond0115/mju-backend-dev/blob/main/lab5/README.md)
 * LAB-6 : [멀티쓰레드 프로그래밍](https://github.com/almond0115/mju-backend-dev/blob/main/lab6/README.md)
+* LAB-7 : [RESTful API](https://github.com/almond0115/mju-backend-dev/blob/main/lab7/README.md)
 
 ## 🤔 공부 기록 
+
+* [[10/30] RESTful API & OAuth](https://github.com/almond0115/mju-backend-dev/blob/main/study/restful_api_oauth.md) 
+
 * [[10/26] Producer-Consumer Problem](https://github.com/almond0115/mju-backend-dev/blob/main/study/producer_consumer/README.md)
 
 * [[10/17] Multi Threading](https://github.com/almond0115/mju-backend-dev/blob/main/study/multi_threading.md)
