@@ -17,7 +17,9 @@
 
 ## 🤔 공부 기록 
 
-* [[10/30] RESTful API & OAuth](https://github.com/almond0115/mju-backend-dev/blob/main/study/restful_api_oauth.md) 
+* [[11/2] OAuth 2.0](https://github.com/almond0115/mju-backend-dev/blob/main/study/oauth.md) 
+
+* [[10/30] RESTful API](https://github.com/almond0115/mju-backend-dev/blob/main/study/restful_api.md) 
 
 * [[10/26] Producer-Consumer Problem](https://github.com/almond0115/mju-backend-dev/blob/main/study/producer_consumer/README.md)
 
