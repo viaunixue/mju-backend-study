@@ -28,14 +28,14 @@ OAuth가 달성하려는 것은 `신원을 노출하지 않고 권한을 부여�
 오로지 투숙 기간동안 그 방에 들어갈 수 있는 "권한"을 의미하는 것과 같습니다.
 ```
 
-## 인증 &rarr; 인가 &rarr; 인가 코드
+## 인증 &rarr; 인가 &rarr; 인가 코드 
 * `Authentication` (인증) : 사용자 id / password 확인 <br> 
     &rarr; 신원 체크 (권한 체크가 아님) <br>
 
 * `Authorization` (인가)  : 사용자가 우리 앱에 (플랫 폼에 있는) 개인 정보를 사용 <br> 
     &rarr; 권한 부여
 
-* `Authorization Code` : Authorization 단계 후 auth server가 우리 앱에 전달하는 중간 결과물
+* `Authorization Code` : Authorization 단계 후 auth server가 우리 앱에 전달하는 중간 결과물 <br>
     &rarr; REST API에 바로 쓸 수 없고 반드시 `access token` 으로 교환해서 써야 합니다.
 
 ## OAuth 2.0 이해 당사자
