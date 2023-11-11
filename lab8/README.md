@@ -261,6 +261,137 @@ if __name__ == '__main__':
 
 ## `Test #10`
 ### 계산기 RESTful API
+```python
+import json
+from flask import Flask, make_response, render_template, request, jsonify
+from http import HTTPStatus
+
+app = Flask(__name__)
+
+@app.route('/<int:num1>/<string:op>/<int:num2>', methods=['GET'])
+def calculate_get(num1, op, num2):
+    result = do_calculation(num1, op, num2)
+    if result is None:
+        error_resp = make_response('{"error":"잘못된 연산자 또는 인수입니다."}', HTTPStatus.BAD_REQUEST)
+        error_resp.headers['Content-Type'] = 'application/json; charset=utf-8'
+        return error_resp
+
+    resp_data = {'num1': num1, 'op' : op, 'num2': num2}
+    json_resp = json.dumps(resp_data)
+    resp = "인수1, 연산자, 인수2의 JSON 값은 다음과 같습니다 : %s <br> 최종 연산 결과 값은 다음과 같습니다: %s" %(json_resp, result)
+    return resp
+
+@app.route('/')
+def calculate_main():
+    return render_template('calculator.html')
+
+@app.route('/post', methods=['POST'])
+def calculate_post():
+    arg1 = request.form['input1']
+    operator = request.form['operator']
+    arg2 = request.form['input2']
+
+    try:
+        arg1 = int(arg1)
+        arg2 = int(arg2)
+    except ValueError:
+        error_resp = make_response('{"error":"POST 방식에서 JSON에 필요한 데이터 누락입니다"}', HTTPStatus.BAD_REQUEST)
+        return error_resp
+
+    result = do_calculation(arg1, operator, arg2)
+
+    if result is None:
+        error_resp = make_response('{"error":"연산자 또는 인수를 올바르게 넣어주세요."}', HTTPStatus.BAD_REQUEST)
+        return error_resp
+
+    resp_data = {'arg1': arg1, 'operator' : operator, 'arg2': arg2}
+    json_resp = json.dumps(resp_data)
+    resp = "인수1, 연산자, 인수2의 JSON 값은 다음과 같습니다 : %s <br> 최종 연산 결과 값은 다음과 같습니다: %s" %(json_resp, result)
+    return resp
+
+def do_calculation(arg1, operator, arg2) : 
+    if operator == '+':
+        return arg1 + arg2
+    elif operator == '-':
+        return arg1 - arg2
+    elif operator == '*':
+        return arg1 * arg2
+    else:
+        return None
 
 
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=29130)
+```
 
+#### Initial Setting
+> 먼저 flask10 파일을 29130 포트로 열어줍니다.
+```
+$ flask --app flask10 run --port 29130
+```
+<br>
+
+> 터미널을 새로 열고, 다음 명령어를 통해 localhost:8000 으로 접속하면 <br> 해당 요청이 원격 서버의 localhost:29130로 전달되어 원격 서버의 서비스를 로컬에서 이용할 수 있도록 해줍니다.
+```
+& ssh -p 10022 -L8000:localhost:29130 sysdesignlab.mju.ac.kr
+```
+<br>
+
+#### Getting Started
+> 간단하게 작성한 html 파일 코드는 다음과 같습니다.
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Calculator (POST request)</title>
+</head>
+<body>
+    <form action="/post" method="post">
+        <p> 인자 1 : <input type="number" id="input1" name="input1"> </p>
+        <p> 연산자 : <input type="text" id="operator" name="operator"> </p>
+        <p> 인자 2 : <input type="number" id="input2" name="input2"> </p>
+        <p> 인자와 연산자를 입력하고 제출 버튼을 누르세요. <input type="submit" value="제출" onclick="alert('제출 완료!')" /></p>
+    </form>
+</body>
+</html>
+```
+<br>
+
+> 브라우저에 localhost:8000을 입력하면 다음의 화면을 확인할 수 있습니다.
+
+![flask_10.1](/asset/img/lab8/10-1.png)
+<br>
+
+> 브라우저에 localhost:8000/12/*/5 를 입력하면 GET 요청이 정상 입력 후 200 OK 인 것을 확인할 수 있습니다.
+
+![flask_10.2](/asset/img/lab8/10-2.png)
+![flask_10.3](/asset/img/lab8/10-3.png)
+<br>
+
+> 브라우저에 localhost:8000/12/**/5 를 입력하면 GET 요청이 비정상 입력 후 400 Bad Request 인 것을 확인할 수 있습니다.
+
+![flask_10.4](/asset/img/lab8/10-4.png)
+![flask_10.5](/asset/img/lab8/10-5.png)
+<br>
+
+> 브라우저 root 화면에서 html 입력창을 채우고 제출을 누르면 POST 요청이 정상 입력 후 200 OK 인것을 확인할 수 있습니다.
+
+![flask_10.6](/asset/img/lab8/10-6.png)
+![flask_10.7](/asset/img/lab8/10-7.png)
+![flask_10.8](/asset/img/lab8/10-8.png)
+<br>
+
+> 브라우저 root 화면에서 html 입력창을 비우고 제출을 누르면 POST 요청이 비정상 입력 후 400 Bad Request 인것을 확인할 수 있습니다.
+
+![flask_10.9](/asset/img/lab8/10-9.png)
+![flask_10.10](/asset/img/lab8/10-10.png)
+![flask_10.11](/asset/img/lab8/10-11.png)
+<br>
+
+> 브라우저 root 화면에서 html 입력창을 잘못 채우고 제출을 누르면 POST 요청이 비정상 입력 후 400 Bad Request 인것을 확인할 수 있습니다.
+
+![flask_10.12](/asset/img/lab8/10-12.png)
+![flask_10.13](/asset/img/lab8/10-13.png)
+![flask_10.14](/asset/img/lab8/10-14.png)
+<br>
