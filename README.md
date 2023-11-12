@@ -27,6 +27,8 @@
 
 ## 🤔 공부 기록 
 
+* [[11/12] HTTP Status Code](https://github.com/almond0115/mju-backend-dev/blob/main/study/http_status.md)
+
 * [[11/8] Python Flask](https://github.com/almond0115/mju-backend-dev/blob/main/study/pythonFlask.md)
 
 * [[11/5] Web 기반 Framework](https://github.com/almond0115/mju-backend-dev/blob/main/study/framework.md)
