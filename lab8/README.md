@@ -395,3 +395,235 @@ $ flask --app flask10 run --port 29130
 ![flask_10.13](/asset/img/lab8/10-13.png)
 ![flask_10.14](/asset/img/lab8/10-14.png)
 <br>
+
+## `TEST #11`
+### WSGI가 기대하는 App Server Code 형태
+
+> 다음은 wsgi1.py 파일 코드입니다.
+```python
+def application(environ, start_response):       # Callable
+    print(environ['REQUEST_METHOD'])            # 첫번째 인자는 HTTP request 관련 dict 임
+    print(environ['PATH_INFO'])
+
+    status = '200 OK'
+    headers = [('Content-Type', 'text/html')]
+
+    start_response(status, headers)             # HTTP response body 반환 전 start_response()를 호출함
+
+    return [b'Hello World wsgi1']               # HTTP body 는 iterable 이어야 함
+```
+
+> 터미널에 다음과 같은 명령어로 실행을 요청합니다.
+
+![wsgi1_1](/asset/img/wsgi1_1.png)
+
+> 브라우저에 다음 URL을 입력합니다.
+
+![wsgi1_2](/asset/img/wsgi1_2.png)
+
+<br>
+
+`다음의 uwsgi.ini 설정 파일을 통해 명령문을 간단하게 작성하여 실행할 수 있습니다.`
+
+```ini
+[uwsgi]
+plugin = python3
+socket = 127.0.0.1:19130
+```
+
+<br>
+
+> 터미널에 다음과 같은 명령어로 실행을 요청합니다.
+
+![wsgi1_ini_1](/asset/img/wsgi1_ini_1.png)
+
+> 브라우저에 다음 URL을 입력합니다.
+
+![wsgi1_2](/asset/img/wsgi1_2.png)
+
+## `TEST #12`
+### HTTP Request Body 읽기
+
+> 다음은 wsgi2.py 파일 코드입니다.
+```python
+import json
+
+def application(environ, start_response):
+    print(environ['REQUEST_METHOD'])
+    print(environ['PATH_INFO'])
+
+body_bytes = environ['wsgi.input'].read()
+body_str = body_bytes.decode('utf-8')
+body_json = json.loads(body_str)
+
+status = '200 OK'
+headers = [('Content-Type', 'text/html')]
+
+start_response(status, headers)
+
+response = f'Hello World {body_json["name"]}'
+return [bytes(response, encoding='utf-8')]
+```
+
+> 터미널에 다음과 같은 명령어로 실행을 요청합니다.
+
+```
+uwsgi --ini uwsgi.ini --module wsgi2
+```
+
+&rarr; 터미널을 새로 열고, 다음 POST 명령어를 입력합니다.
+
+```
+curl -X POST http://localhost/60162176 \-H "Content-Type: application/json; charset=utf-8" --data '{"name":"JongHyun"}'
+```
+
+<br>
+
+![wsgi1_ini_2](/asset/img/wsgi_ini_2.png)
+
+### WSGI 와 Flask 연동 문제 해결
+
+> uWSGI 호출 방식을 다음처럼 바꾸어 flask2.py를 실행합니다.
+```
+$ uwsgi --ini uwsgi.ini \
+    --manage-script-name \
+    --mount /6016217=flask:app
+```
+
+<br>
+
+> `--mount /학번=XXX` 의 역할
+
+이 명령은 /학번 이라는 prefix 뒤에 application server가 동작함을 의미합니다.
+
+<br>
+
+> `--mount /학번=flask2:app` 에서 `flask:app` 의 역할
+
+그리고 이때 application server 가 실행할 내용은 `flask2.py` 이고, <br>
+application 이라는 이름의 callable 대신 app 이라는 이름을 사용하게 지정합니다.
+
+<br>
+
+> `--manage-script-name` 역할
+
+`/학번` 이 prefix로 붙어서 요청이 들어오더라도 이걸 제거하고 application server를 호출하게 합니다.
+
+<br>
+
+`다음의 uwsgi2.ini 설정 파일을 통해 명령문을 간단하게 작성하여 실행할 수 있습니다.`
+```ini
+[uwsgi]
+plugin = python3
+socket = 127.0.0.1:19130
+manage-script-name = true
+mount = /60162176=flask2:app
+```
+
+> 터미널에 다음과 같은 명령어로 실행을 요청합니다.
+
+```
+uwsgi --ini uwsgi2.ini
+```
+
+> 터미널을 새로 열고, flask2.py 를 29130 포트에 열어줍니다.
+```
+flask --app flask2 run --port 29130
+```
+
+![flask_ini_1](/asset/img/flask2_ini_1.png)
+
+> 터미널을 새로 열고, 다음 명령어를 통해 localhost:8000 으로 접속하면 <br> 해당 요청이 원격 서버의 localhost:29130로 전달되어 원격 서버의 서비스를 로컬에서 이용할 수 있도록 해줍니다.
+```
+& ssh -p 10022 -L8000:localhost:29130 sysdesignlab.mju.ac.kr
+```
+
+<br>
+
+> 브라우저를 통해 flask2.py 와 WSGI 연동이 정상적으로 이루어지는 것을 확인할 수 있습니다.
+
+![flask_ini_2](/asset/img/flask2_ini_2.png)
+
+
+## `TEST #13`
+### 멀티 쓰레드, 멀티 프로세스
+
+> 다음은 flask11.py 파일 코드입니다.
+
+```python
+from flask import Flask
+
+app = Flask(__name__)
+
+count = 0
+
+@app.route('/increase')
+def on_increase():
+    global count
+    count += 1
+    return str(count)
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=29130)
+```
+`flask11.py`를 다음 3가지 방법으로 실행하고, 실습 서버에서 대응되는 curl 명령들을 10회 반복합니다.
+#### 방법 #1
+> 터미널에 다음과 같은 명령어로 실행을 요청합니다.
+```
+$ flask --app flask11 run --port 29130
+```
+&rarr; 터미널을 새로 열고, 다음 GET 명령어를 입력합니다.
+```
+$ curl -X GET http://localhost:29130/increase
+```
+
+![flask11_multi_1](/asset/img/flask11_multi_1.png)
+
+#### 방법 #2
+> 터미널에 다음과 같은 명령어로 실행을 요청합니다.
+```
+$ uwsgi --ini uwsgi.ini --manage-script-name \
+--mount /60162176=flask11:app --processes=1 --threads=2
+```
+&rarr; 터미널을 새로 열고, 다음 GET 명령어를 입력합니다.
+```
+$ curl -X GET http://localhost/60162176/increase
+```
+
+![flask11_multi_2](/asset/img/flask11_multi_2.png)
+
+#### 방법 #3
+> 터미널에 다음과 같은 명령어로 실행을 요청합니다.
+```
+$ uwsgi --ini uwsgi.ini --manage-script-name \
+--mount /60162176=flask11:app --processes=2 --threads=1
+```
+&rarr; 터미널을 새로 열고, 다음 GET 명령어를 입력합니다.
+```
+$ curl -X GET http://localhost/60162176/increase
+```
+
+![flask11_multi_3](/asset/img/flask11_multi_3.png)
+
+### Python Application Server 작성 시 주의점
+
+* `Python application server`는 `WSGI`를 통해서 실행됩니다.
+
+* production 환경에서 WSGI가 몇 개의 processes/threads로 실행될 지 모릅니다.
+
+* 만일 모든 요청이 동일한 WSGI process에 의해 실행된다면 앞에서 처럼 전역 변수 값은 유지될 것입니다.
+
+* 그러나 각 요청은 서로 다른 WSGI process에 의해 실행될 것이고 <br>
+이는 `전역 변수를 쓰는 것 같은 코드 패턴은 써서는 안된다`는 뜻입니다.
+
+* 즉, application server 에 어떤 state 를 저장해서는 안된다는 뜻입니다.
+
+<br>
+
+> 앞의 수업에서 `Request-Response` 방식이면서 `stateless`인 경우 RESTful API 방식을 사용한다고 했던 것을 기억할 것!
+
+#### 그럼 state는 어디에 있어야 할까?
+&rarr; Application server code 가 아니라 외부 DB
+
+#### 만일 state 접근을 많이 해야 하는 app 이라면? (ex. 실시간 게임 서버)
+&rarr; RESTful API 방식은 stateless 한 응용에 적합. socket server 방식으로 고려할 것
