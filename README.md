@@ -27,11 +27,15 @@
 
 ## 🤔 공부 기록 
 
+* [[11/14] WSGI (Web Server Gateway Interface)](https://github.com/almond0115/mju-backend-dev/blob/main/study/wsgi.md)
+
 * [[11/12] HTTP Status Code](https://github.com/almond0115/mju-backend-dev/blob/main/study/http_status.md)
 
-* [[11/8] Python Flask](https://github.com/almond0115/mju-backend-dev/blob/main/study/pythonFlask.md)
+* [[11/9] Python Flask](https://github.com/almond0115/mju-backend-dev/blob/main/study/python_flask.md)
 
-* [[11/5] Web 기반 Framework](https://github.com/almond0115/mju-backend-dev/blob/main/study/framework.md)
+* [[11/7] Web 기반 Framework](https://github.com/almond0115/mju-backend-dev/blob/main/study/framework.md)
+
+* [[11/5] Stateful vs Stateless](https://github.com/almond0115/mju-backend-dev/blob/main/study/state.md) 
 
 * [[11/2] OAuth 2.0](https://github.com/almond0115/mju-backend-dev/blob/main/study/oauth.md) 
 
