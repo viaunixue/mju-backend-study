@@ -45,7 +45,7 @@
 * [ ] worker thread 2개 이상일 때 위 명령어 제대로 동작하는지 (= synchronization 구현 여부)
 * [ ] 둘 이상의 채팅 방 유저들이 나눠 들어가 있는 경우 대화방 간 간섭 없이 제대로 채팅 되도록 하기
 * [X] I/O multiplexing 적용 여부
-* [ ] producer-consumer 적용 여부
+* [X] producer-consumer 적용 여부
 * [ ] Message Handler Map 적용 여부 
 * [ ] JSON 구현 
 * [ ] Protobuf 구현

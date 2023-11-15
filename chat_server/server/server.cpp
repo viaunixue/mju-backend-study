@@ -7,6 +7,7 @@
 #include <queue>
 #include <map>
 #include <set>
+#include <csignal>
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <errno.h>
@@ -19,6 +20,38 @@ using namespace std;
 static const uint16_t PORT = 19130;
 constexpr int WORKER_THREAD_NUMBER = 2;
 
+// 쓰레드 종료 조건 위한 플래그
+atomic<bool> quit(false);
+
+// 공유 자원인 큐와 관련된 Mutex 및 조건 변수
+mutex msgQueMutex, clientSocksMutex, willCloseMutex;
+condition_variable msgQueFilled;
+queue<string> msgQueue;
+
+// Producer
+void ProduceMessage(const string& msg){
+    unique_lock<mutex> ul(msgQueMutex);
+    msgQueue.push(msg);
+    msgQueFilled.notify_one();
+}
+
+// Consumer
+void ConsumeMessage(int clientSock){
+    while(!quit.load()){
+        string message;
+        {
+            unique_lock<mutex> ul(msgQueMutex);
+            while(msgQueue.empty()){
+                msgQueFilled.wait(ul);
+            }
+            message = msgQueue.front();
+            msgQueue.pop();
+        }
+        // 클라이언트에게 메세지 전송
+        send(clientSock, message.c_str(), message.size(), 0);
+    }
+}
+
 struct ClientInfo {
     int sock_num;
     string nickname;
@@ -27,7 +60,9 @@ struct ClientInfo {
 
 // 현재 연결된 client socket (active socket)
 map<int, ClientInfo> clientSocks;
+
 set<int> willClose;
+vector<thread> worker_threads;
 
 // 명령어 처리 함수
 void ProcessCommand(int client_sock, const string& command){
@@ -37,7 +72,11 @@ void ProcessCommand(int client_sock, const string& command){
 
 void MessageWorkerThread(int worker_id){
     cout << "메세지 작업 쓰레드 #" << worker_id << "생성\n";
-}
+    while(!quit.load()){
+        // 메세지 작업 수행
+        this_thread::sleep_for(chrono::milliseconds(100));
+    }
+} 
 
 // 클라이언트와 통신 
 void CommunicateWithClient(int clientSock){
@@ -47,10 +86,12 @@ void CommunicateWithClient(int clientSock){
 
         if (numRecv == 0){
             cout << "Socket closed : " << clientSock << endl;
+            unique_lock<mutex> ul(willCloseMutex);
             willClose.insert(clientSock);
             break;
         } else if (numRecv < 0) {
             cerr << "recv() failed : " << strerror(errno) << ", client_sock : " << clientSock << endl;
+            unique_lock<mutex> ul(willCloseMutex);
             willClose.insert(clientSock);
             break;
         } else {
@@ -68,18 +109,14 @@ void CommunicateWithClient(int clientSock){
                     ProcessCommand(clientSock, command);
                 } else {
                     // 일반 메세지 -> broadcasting
-                    for (auto& [otherSock, _] : clientSocks){
-                        if (otherSock != clientSock){
-                            send(otherSock, receivedData.c_str(), receivedData.size(), 0);
-                        }
-                    }
+                    ProduceMessage(receivedData);
                 }
             }
-
         }
     }
+    // 종료 전 쓰레드 생성 및 쓰레드 생성 및 detach()
+    thread(ConsumeMessage, clientSock).detach();
 }
-
 // 클라이언트와 연결
 void HandleClientConnection(int serverSock){
     while (true){
@@ -113,11 +150,13 @@ void HandleClientConnection(int serverSock){
             if (clientSock < 0){
                 cerr << "accept failed : " << strerror(errno) << endl; 
             } else {
+                unique_lock<mutex> ul(clientSocksMutex);
                 clientSocks[clientSock] = {clientSock, "jjh", time(NULL)};
                 thread(CommunicateWithClient, clientSock).detach(); // 클라이언트 통신 스레드 시작
             }
         }
 
+        unique_lock<mutex> ul(clientSocksMutex);
         for (auto it = clientSocks.begin() ; it != clientSocks.end() ; ++it){
             int clientSock = it -> first;
             auto &info = it -> second;
@@ -139,7 +178,28 @@ void HandleClientConnection(int serverSock){
     }
 }
 
+void ShutdownServer() {
+    quit.store(true);
+    // 클라이언트 소켓 닫기
+    for (auto& [clientSock, _] : clientSocks){
+        close(clientSock);
+    }
+
+    // 쓰레드 종료 대기
+    for (auto& thread : worker_threads){
+        if(thread.joinable()){
+            thread.join();
+        }
+    }
+}
+
 int main(){
+    signal(SIGINT, [](int) {
+        cout << "Received SIGINT, shutting down server...\n";
+        ShutdownServer();
+        exit(0);
+    });
+
     int passiveSock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 
     // port 재사용 옵션 설정
@@ -165,23 +225,16 @@ int main(){
         return 1;
     }
 
-    vector<thread> worker_threads;
+    cout << "Port 번호 " << PORT << "에서 서버 동작 중\n" << endl;
 
     for(int i=0 ; i < WORKER_THREAD_NUMBER ; ++i){
-        worker_threads.emplace_back(MessageWorkerThread, i);
+        worker_threads.emplace_back(MessageWorkerThread,i);
     }
-
-    cout << "Port 번호 " << PORT << "에서 서버 동작 중\n" << endl;
 
     while(true){
         HandleClientConnection(passiveSock);
     }
     close(passiveSock);
-
-    // 메세지 작업 쓰레드 종료 대기
-    for (auto& thread : worker_threads){
-        thread.join();
-    }
 
     return 0;
 }
