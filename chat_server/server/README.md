@@ -35,18 +35,20 @@
 ### 채팅 서버 종료하기 (/shutdown)
 1. [ ] 생성한 쓰레드들을 정리하고 프로그램 종료하기
 
-### `/` 없이 입력하기
+### 그 외 기능
 1. [ ] `/`로 시작하지 않는 문자열은 채팅 메세지로 인식하기
 2. [ ] 만약 대화 방에 없는 경우, 해당 유저에게 대화방 미참여 시스템 메세지 전송하기
 3. [ ] 만약 대화 방에 있는 경우, 해당 대화 방에 해당 메세지 broadcasting 하기
 
 ## 구현 요구 조건
-* [ ] worker thread 2개 이상으로 지정할 수 있도록 하기
+* [X] worker thread 2개 이상으로 지정할 수 있도록 하기
 * [ ] worker thread 2개 이상일 때 위 명령어 제대로 동작하는지 (= synchronization 구현 여부)
 * [ ] 둘 이상의 채팅 방 유저들이 나눠 들어가 있는 경우 대화방 간 간섭 없이 제대로 채팅 되도록 하기
-* [ ] I/O multiplexing 적용 여부
+* [X] I/O multiplexing 적용 여부
 * [ ] producer-consumer 적용 여부
 * [ ] Message Handler Map 적용 여부 
+* [ ] JSON 구현 
+* [ ] Protobuf 구현
 
 ## 리팩토링
 * [ ] 연속된 메세지를 race condition이 발생하지 않도록 처리하기

@@ -1,6 +1,8 @@
 {
     "files.associations": {
         "atomic": "cpp",
-        "mutex": "cpp"
-    }
+        "mutex": "cpp",
+        "iostream": "cpp"
+    },
+    "C_Cpp.errorSquiggles": "disabled"
 }
