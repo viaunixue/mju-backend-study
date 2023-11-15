@@ -27,6 +27,7 @@ atomic<bool> quit(false);
 mutex msgQueMutex, clientSocksMutex, willCloseMutex;
 condition_variable msgQueFilled;
 queue<string> msgQueue;
+set<int> willClose;
 
 // Producer
 void ProduceMessage(const string& msg){
@@ -48,7 +49,14 @@ void ConsumeMessage(int clientSock){
             msgQueue.pop();
         }
         // 클라이언트에게 메세지 전송
-        send(clientSock, message.c_str(), message.size(), 0);
+        // TODO : send 함수 실패 처리 추가 필요
+        if(send(clientSock, message.c_str(), message.size(), 0) < 0){
+            cerr << "send() failed : " << strerror(errno) << ", client_sock : " << clientSock << endl;
+            // 실패 처리
+            unique_lock<mutex> ul(willCloseMutex);
+            willClose.insert(clientSock);
+            break;
+        }
     }
 }
 
@@ -61,7 +69,6 @@ struct ClientInfo {
 // 현재 연결된 client socket (active socket)
 map<int, ClientInfo> clientSocks;
 
-set<int> willClose;
 vector<thread> worker_threads;
 
 // 명령어 처리 함수
@@ -139,6 +146,8 @@ void HandleClientConnection(int serverSock){
         if(numReady < 0){
             cerr << "select() failed : " << strerror(errno) << endl;
             continue;
+        } else if (numReady == 0){
+            continue;
         }
 
         // 새 클라이언트 연결 수락
@@ -150,6 +159,11 @@ void HandleClientConnection(int serverSock){
             if (clientSock < 0){
                 cerr << "accept failed : " << strerror(errno) << endl; 
             } else {
+                char clientAddr[INET_ADDRSTRLEN];
+                inet_ntop(AF_INET, &(sin.sin_addr), clientAddr, INET_ADDRSTRLEN);
+                int clientPort = ntohs(sin.sin_port);
+                cout << "Accepted connection from : " << clientAddr << " : " << clientPort << " (socket : " << clientSock << ")" << endl;
+                 
                 unique_lock<mutex> ul(clientSocksMutex);
                 clientSocks[clientSock] = {clientSock, "jjh", time(NULL)};
                 thread(CommunicateWithClient, clientSock).detach(); // 클라이언트 통신 스레드 시작
@@ -161,7 +175,7 @@ void HandleClientConnection(int serverSock){
             int clientSock = it -> first;
             auto &info = it -> second;
             if (!FD_ISSET(clientSock, &rset)){
-                if (info.last + 3 <= time(NULL)){
+                if (info.last + 30 <= time(NULL)){
                     cout << "Idle timeout. clientSock: " << clientSock << endl;
                     willClose.insert(clientSock);
                 }
