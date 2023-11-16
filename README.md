@@ -27,6 +27,8 @@
 
 ## 🤔 공부 기록 
 
+* [[11/16] Redis : State 저장을 위한 in-memory DB](https://github.com/almond0115/mju-backend-dev/blob/main/study/redis.md)
+
 * [[11/14] WSGI (Web Server Gateway Interface)](https://github.com/almond0115/mju-backend-dev/blob/main/study/wsgi.md)
 
 * [[11/12] HTTP Status Code](https://github.com/almond0115/mju-backend-dev/blob/main/study/http_status.md)
