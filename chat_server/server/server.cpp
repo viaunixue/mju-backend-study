@@ -37,6 +37,7 @@ enum MessageType {
     CSName,
     CSRooms,
     CSCreateRoom,
+    CSJoinRoom,
     // 다른 메세지 유형 이후 추가 
 };
 
@@ -45,11 +46,13 @@ static map<string, MessageType> stringToMessageType = {
     {"CSName", CSName},
     {"CSRooms", CSRooms},
     {"CSCreateRoom", CSCreateRoom},
+    {"CSJoinRoom", CSJoinRoom},
     // 다른 메세지 유형에 대한 매핑 추가
 };
 
 class AppMessage {
     public:
+        int roomId;
         string name;
         string roomTitle;
 };
@@ -119,6 +122,22 @@ void HandleRoomStatus(int clientSock, const AppMessage& message){
         json response;
         response["type"] = "SCRoomsResult";
 
+        // ChatRoom 배열에 저장된 방 정보를 나열
+        for (const ChatRoom& room : chatRooms) {
+            json roomInfo;
+            roomInfo["roomId"] = room.roomNumber;
+            roomInfo["title"] = room.roomTitle;
+
+            // 참여 중인 멤버들의 이름을 배열로 저장
+            json participantNames;
+            for (const string& participant : room.participantNames) {
+                participantNames.push_back(participant);
+            }
+            roomInfo["members"] = participantNames;
+
+            response["rooms"].push_back(roomInfo);
+        }
+
         cout << "[HandleRoomStatus] response message: " << response.dump() << endl;
         
         SendMessage(clientSock, response.dump());
@@ -146,7 +165,7 @@ void HandleRoomCreate(int clientSock, const AppMessage& message){
     json response;
     response["type"] = "SCSystemMessage";
     // response["roomNumber"] = roomNumber;
-    response["text"] = "방에 입장했습니다.";
+    response["text"] = message.name + "님이 방에 입장했습니다.";
     // response["participantNames"] = newRoom.participantNames; // Add participant names to the response
     SendMessage(clientSock, response.dump());
 
@@ -161,10 +180,17 @@ void HandleRoomCreate(int clientSock, const AppMessage& message){
 //     // SendMessageToRoom(roomNumber, systemMessage.dump());
 }
 
+void HandleRoomJoin(int clientSock, const AppMessage& message){
+    cout << "[HandleRoomJoin] clientSock " << clientSock << " " << endl;
+
+
+}
+
 static HandlerMap handlers {
     {CSName, HandleNameChange},
     {CSRooms, HandleRoomStatus},
     {CSCreateRoom, HandleRoomCreate},
+    {CSJoinRoom, HandleRoomJoin},
     // 다른 메시지 유형 핸들러 추가 예정
 };
 
@@ -186,6 +212,11 @@ void HandlerCommand(int clientSock, const string& msg){
                 if (handleIt != handlers.end()) {
                     // 해당 유형에 맞는 핸들러 호출
                     AppMessage appMessage;
+
+                    // AppMessage 객체를 생성하면서 roomId 값 설정
+                    if (parsedJson.contains("roomId")) {
+                        appMessage.name = parsedJson["roomId"];
+                    }
 
                     // AppMessage 객체를 생성하면서 name 값 설정
                     if (parsedJson.contains("name")) {
