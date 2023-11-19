@@ -26,12 +26,14 @@ using namespace std;
 
 enum MessageType {
     CSName,
+    CSRooms,
     // 다른 메세지 유형 이후 추가 
 };
 
 // 문자열을 MessageType으로 매핑하는 맵
 static map<string, MessageType> stringToMessageType = {
     {"CSName", CSName},
+    {"CSRooms", CSRooms},
     // 다른 메세지 유형에 대한 매핑 추가
 };
 
@@ -47,7 +49,7 @@ constexpr int WORKER_THREAD_NUMBER = 5;
 atomic<bool> quit(false);
 
 // 공유 자원인 큐와 관련된 Mutex 및 조건 변수
-mutex coutMutex, msgQueuesMutex, willCloseMutex;
+mutex msgQueuesMutex, clientSocksMutex, willCloseMutex;
 condition_variable msgQueFilled;
 queue<string> msgQueue;
 
@@ -97,8 +99,21 @@ void HandleNameChange(int clientSock, const AppMessage& newNickname){
     }
 }
 
+void HandleRoomStatus(int clientSock, const AppMessage& newRoomName){
+    cout << "[HandleRoomStatus] clientSock " << clientSock << endl;
+    if(clientSocks.find(clientSock) != clientSocks.end()){
+        json response;
+        response["type"] = "SCRoomsResult";
+
+        cout << "[HandleNameChange] response message: " << response.dump() << endl;
+        
+        SendMessage(clientSock, response.dump());
+    }
+}
+
 static HandlerMap handlers {
-    {CSName, HandleNameChange}
+    {CSName, HandleNameChange},
+    {CSRooms, HandleRoomStatus},
     // 다른 메시지 유형 핸들러 추가 예정
 };
 
@@ -158,11 +173,12 @@ void ProduceMessage(int clientSock, const string& msg){
 void ConsumeMessage(int clientSock){
     cout << "[ConsumeMessage] socket: " << clientSock << endl;
     while(!quit.load()){
-        cout << "[ConsumeMessage] socket ( while loop ) : " << clientSock << endl;
+        cout << "[ConsumeMessage] socket enter the loop : " << clientSock << endl;
         string message;
         {
             unique_lock<mutex> ul(msgQueuesMutex);
             while(!quit.load() && msgQueues[clientSock].empty()) {
+                cout << "[ConsumeMessage] socket enter the waiting loop : " << clientSock << endl;
                 msgQueFilled.wait(ul);
             }
             cout <<  "[ConsumeMessage] After msgQueFilled  : " << message << endl;
@@ -174,10 +190,12 @@ void ConsumeMessage(int clientSock){
             }
         }
         cout <<  "[ConsumeMessage] Consumed message: " << message << endl;
+
         if (!message.empty()){
             HandlerCommand(clientSock, message);
         }
     }
+    cout <<  "[ConsumeMessage] Consume finished : " << clientSock << endl;
 }
 
 void CloseClientSockets(){
@@ -199,18 +217,36 @@ void HandleClientConnection(int serverSock){
         int maxFd = serverSock;            
 
         // 클라이언트 소켓 추가하고 최대 소켓 번호 갱신
-        for (int clientSock : clientSocks) {
-            FD_SET(clientSock, &rset);
-            if (clientSock > maxFd){
-                maxFd = clientSock;   
+        {
+            unique_lock<mutex> ul(clientSocksMutex);
+            for (int clientSock : clientSocks) {
+                FD_SET(clientSock, &rset);
+                if (clientSock > maxFd){
+                    maxFd = clientSock;   
+                }
             }
         }
-
+         
         // select()
         int numReady = select(maxFd + 1, &rset, NULL, NULL, NULL);
         if(numReady < 0){
-            cerr << "select() failed : " << strerror(errno) << endl;
-            continue;
+            cerr << "[HandleClientConnection] select() failed : " << strerror(errno) << endl;
+            if(errno == EBADF){
+                {
+                    unique_lock<mutex> ul(clientSocksMutex);
+                    for (auto it = clientSocks.begin(); it != clientSocks.end();){
+                        int clientSock = *it;
+                        if (!FD_ISSET(clientSock, &rset)) {
+                            cout << "Closing socket : " << clientSock << endl;
+                            close(clientSock);
+                            it = clientSocks.erase(it);
+                        } else {
+                            ++it;
+                        }
+                    }
+                }
+                
+            }
         } else if (numReady == 0){
             continue;
         }
@@ -222,14 +258,17 @@ void HandleClientConnection(int serverSock){
             unsigned int sin_len = sizeof(sin);
             int clientSock = accept(serverSock, (struct sockaddr *) &sin, &sin_len);
             if (clientSock < 0){
-                cerr << "accept failed : " << strerror(errno) << endl; 
+                cerr << "[HandleClientConnection] accept failed : " << strerror(errno) << endl; 
             } else {
                 char clientAddr[INET_ADDRSTRLEN];
                 inet_ntop(AF_INET, &(sin.sin_addr), clientAddr, INET_ADDRSTRLEN);
                 int clientPort = ntohs(sin.sin_port);
                 cout << "Accepted connection from : " << clientAddr << " : " << clientPort << " (socket : " << clientSock << ")" << endl;
-                
-                clientSocks.insert(clientSock);
+
+                {
+                    unique_lock<mutex> ul(clientSocksMutex);
+                    clientSocks.insert(clientSock);
+                }
 
                 cout << "Added client socket : " << clientSock << endl;
 
@@ -238,49 +277,64 @@ void HandleClientConnection(int serverSock){
             }
         }
 
-        for (int clientSock : clientSocks) {
-            if (!FD_ISSET(clientSock, &rset)){
-                continue;
-            }
-
-            // 이 연결로부터 데이터를 읽음
-            char buf[65536];
-            int numRecv = recv(clientSock, buf, sizeof(buf), 0);
-            if (numRecv == 0){
-                cout << "Socket closed: " << clientSock << endl;
-                willClose.insert(clientSock);
-            } else if (numRecv < 0){
-                cerr << "recv() failed: " << strerror(errno) << ", clientSock: " << clientSock << endl;
-                willClose.insert(clientSock);
-            } else {
-                cout << "[HandleClientConnection] Received: " << numRecv << " bytes, clientSock " << clientSock << endl;
-                string receivedData(buf, numRecv);
-                cout << "[HandleClientConnection] Before receivedData: " << receivedData << endl;
-
-                // 중괄호 이전의 모든 값을 제거
-                size_t bracePos = receivedData.find('{');
-                if (bracePos != string::npos) {
-                    receivedData = receivedData.substr(bracePos);
-                } else {
-                    cerr << "중괄호를 찾을 수 없습니다." << endl;
-                    return;
+        {
+            unique_lock<mutex> ul(clientSocksMutex);
+            for (int clientSock : clientSocks) {
+                if (!FD_ISSET(clientSock, &rset)){
+                    continue;
                 }
-                cout << "[HandleClientConnection] After receivedData: " << receivedData << endl;
-                ProduceMessage(clientSock, receivedData);
+
+                // 이 연결로부터 데이터를 읽음
+                char buf[65536];
+                int numRecv = recv(clientSock, buf, sizeof(buf), 0);
+                if (numRecv == 0){
+                    cout << "Socket closed: " << clientSock << endl;
+                    willClose.insert(clientSock);
+                } else if (numRecv < 0){
+                    cerr << "recv() failed: " << strerror(errno) << ", clientSock: " << clientSock << endl;
+                    willClose.insert(clientSock);
+                } else {
+                    cout << "[HandleClientConnection] Received: " << numRecv << " bytes, clientSock " << clientSock << endl;
+                    string receivedData(buf, numRecv);
+                    cout << "[HandleClientConnection] Before receivedData: " << receivedData << endl;
+
+                    // 중괄호 이전의 모든 값을 제거
+                    size_t bracePos = receivedData.find('{');
+                    if (bracePos != string::npos) {
+                        receivedData = receivedData.substr(bracePos);
+                    } else {
+                        cerr << "[HandleClientConnection] 중괄호를 찾을 수 없습니다." << endl;
+                        return;
+                    }
+                    cout << "[HandleClientConnection] After receivedData: " << receivedData << endl;
+                    thread produceThread(ProduceMessage, clientSock, receivedData);
+                    workerThreads.push_back(move(produceThread));
+
+                    // ProduceMessage(clientSock, receivedData);
+                }
             }
         }
 
         // 닫아야 하는 소켓 정리
-        for (int clientSock : willClose){
-            cout << "Close : " << clientSock << endl;
-            close(clientSock);
-            clientSocks.erase(clientSock);
-            {
-                unique_lock<mutex> ul(msgQueuesMutex);
-                msgQueues.erase(clientSock);
+        // for (int clientSock : willClose){
+        //     cout << "Close : " << clientSock << endl;
+        //     close(clientSock);
+        //     clientSocks.erase(clientSock);
+        //     {
+        //         unique_lock<mutex> ul(msgQueuesMutex);
+        //         msgQueues.erase(clientSock);
+        //     }
+        // }
+        // willClose.clear();
+        {
+            unique_lock<mutex> ul(clientSocksMutex);
+            for (int clientSockNum : willClose) {
+                cout << "Close : " << clientSockNum << endl;
+                close(clientSockNum);
             }
+            willClose.clear();
         }
-        willClose.clear();
+        
     }
 }
 
