@@ -24,9 +24,19 @@
 using namespace nlohmann;
 using namespace std;
 
+struct ChatRoom {
+    int roomNumber;
+    string roomTitle;
+    vector<string> participantNames;
+    vector<int> participantSockets;
+};
+
+vector<ChatRoom> chatRooms;
+
 enum MessageType {
     CSName,
     CSRooms,
+    CSCreateRoom,
     // 다른 메세지 유형 이후 추가 
 };
 
@@ -34,10 +44,15 @@ enum MessageType {
 static map<string, MessageType> stringToMessageType = {
     {"CSName", CSName},
     {"CSRooms", CSRooms},
+    {"CSCreateRoom", CSCreateRoom},
     // 다른 메세지 유형에 대한 매핑 추가
 };
 
-class AppMessage {};
+class AppMessage {
+    public:
+        string name;
+        string roomTitle;
+};
 
 typedef void (*MessageHandler)(int clientSock, const AppMessage& data);
 typedef map<MessageType, MessageHandler> HandlerMap;
@@ -80,17 +95,16 @@ void SendMessage(int clientSock, const string& message) {
             unique_lock<mutex> ul(willCloseMutex);
             willClose.insert(clientSock);
         }
-        
     }
     cout << "[SendMessage] combinedMessage : " << message << endl;
 }
 
-void HandleNameChange(int clientSock, const AppMessage& newNickname){
-    cout << "[HandleNameChange] clientSock " << clientSock << endl;
+void HandleNameChange(int clientSock, const AppMessage& message){
+    cout << "[HandleNameChange] clientSock " << clientSock << message.name << endl;
     if(clientSocks.find(clientSock) != clientSocks.end()){
         json response;
         response["type"] = "SCSystemMessage";
-        response["text"] = "이름이 변경되었습니다.";
+        response["text"] = "이름이 " + message.name + "로 변경되었습니다.";
         // response["text"] = "이름이 " + static_cast<string>(newNickname) + "으로 변경되었습니다.";
 
         cout << "[HandleNameChange] response message: " << response.dump() << endl;
@@ -99,26 +113,64 @@ void HandleNameChange(int clientSock, const AppMessage& newNickname){
     }
 }
 
-void HandleRoomStatus(int clientSock, const AppMessage& newRoomName){
+void HandleRoomStatus(int clientSock, const AppMessage& message){
     cout << "[HandleRoomStatus] clientSock " << clientSock << endl;
     if(clientSocks.find(clientSock) != clientSocks.end()){
         json response;
         response["type"] = "SCRoomsResult";
 
-        cout << "[HandleNameChange] response message: " << response.dump() << endl;
+        cout << "[HandleRoomStatus] response message: " << response.dump() << endl;
         
         SendMessage(clientSock, response.dump());
     }
 }
 
+void HandleRoomCreate(int clientSock, const AppMessage& message){
+    cout << "[HandleRoomCreate] clientSock " << clientSock << " " << endl;
+    cout << "[HandleRoomCreate] message.roomTitle " << message.roomTitle << " " << endl;
+
+    // 방 번호 생성 (간단한 예시로 현재 방 개수 + 1로 설정)
+    int roomNumber = chatRooms.size() + 1;
+
+    // 생성된 방 정보 저장
+    ChatRoom newRoom;
+    newRoom.roomNumber = roomNumber;
+    newRoom.roomTitle = message.roomTitle;
+    newRoom.participantSockets.push_back(clientSock); // 생성자도 방에 참여
+    newRoom.participantNames.push_back("Creator"); // 방을 만든 사람의 닉네임
+
+    // 채팅방 목록에 추가
+    chatRooms.push_back(newRoom);
+
+    // 클라이언트에게 채팅방 생성 성공 메세지 전송
+    json response;
+    response["type"] = "SCSystemMessage";
+    // response["roomNumber"] = roomNumber;
+    response["text"] = "방에 입장했습니다.";
+    // response["participantNames"] = newRoom.participantNames; // Add participant names to the response
+    SendMessage(clientSock, response.dump());
+
+    // 생성된 방 정보 출력
+    cout << "[HandleRoomCreate] Created Room - Number: " << roomNumber << ", Title: " << message.roomTitle << endl;
+
+//     // 새로 생성된 방에 참여한 사용자에게 시스템 메시지 전송
+//     // json systemMessage;
+//     // systemMessage["type"] = "SCSystemMessage";
+//     // systemMessage["text"] = "방에 참여하셨습니다.";
+
+//     // SendMessageToRoom(roomNumber, systemMessage.dump());
+}
+
 static HandlerMap handlers {
     {CSName, HandleNameChange},
     {CSRooms, HandleRoomStatus},
+    {CSCreateRoom, HandleRoomCreate},
     // 다른 메시지 유형 핸들러 추가 예정
 };
 
 void HandlerCommand(int clientSock, const string& msg){
-    cout << "[HandlerCommand] client socket, message : " << clientSock << ", " << msg << endl;
+    // cout << "[HandlerCommand] client socket, message : " << clientSock << ", " << msg << endl;
+    cout << "[HandlerCommand] test" << endl;
     try {
         // JSON 형식 명령어 파싱
         auto parsedJson = json::parse(msg);
@@ -133,13 +185,30 @@ void HandlerCommand(int clientSock, const string& msg){
                 auto handleIt = handlers.find(commandType);
                 if (handleIt != handlers.end()) {
                     // 해당 유형에 맞는 핸들러 호출
-                    AppMessage AppMessage;
-                    handleIt->second(clientSock, AppMessage);
+                    AppMessage appMessage;
+
+                    // AppMessage 객체를 생성하면서 name 값 설정
+                    if (parsedJson.contains("name")) {
+                        appMessage.name = parsedJson["name"];
+                    }
+
+                    // AppMessage 객체를 생성하면서 roomTitle 값 설정
+                    if (parsedJson.contains("title")) {
+                        appMessage.roomTitle = parsedJson["title"];
+                    }
+                    
+                    handleIt->second(clientSock, appMessage);
                 } else {
                     cerr << "[HandlerCommand] Handler not found for command type : " << commandType << endl;
                 }
             } else {
                 cerr << "[HandlerCommand] Invalid message type : " << commandTypeStr << endl;
+
+                // 디버깅용: stringToMessageType 맵 전체를 출력
+                cerr << "[HandlerCommand] stringToMessageType map contents:" << endl;
+                for (const auto& entry : stringToMessageType) {
+                    cerr << entry.first << " => " << entry.second << endl;
+                }
             }
         } else {
             cerr << "[HandlerCommand] Invalid type : " << msg << endl;
