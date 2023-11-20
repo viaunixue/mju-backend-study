@@ -69,7 +69,6 @@ atomic<bool> quit(false);
 // 공유 자원인 큐와 관련된 Mutex 및 조건 변수
 mutex msgQueuesMutex, willCloseMutex;
 condition_variable msgQueFilled;
-// queue<string> msgQueue;
 
 // 동적으로 생성된 워커 쓰레드를 저장하기 위한 벡터
 vector<thread> workerThreads;
@@ -152,7 +151,6 @@ void HandleRoomStatus(int clientSock, const AppMessage& message){
 void HandleRoomCreate(int clientSock, const AppMessage& message){
     cout << "[HandleRoomCreate] clientSock " << clientSock << " " << endl;
     cout << "[HandleRoomCreate] message.roomTitle " << message.roomTitle << " " << endl;
-    cout << "[HandleRoomCreate] message.name " << message.name << " " << endl;
 
     string clientName = clientSocketToName[clientSock];
     cout << "[HandleRoomCreate] clientName " << clientName << " " << endl;
@@ -172,9 +170,7 @@ void HandleRoomCreate(int clientSock, const AppMessage& message){
     // 클라이언트에게 채팅방 생성 성공 메세지 전송
     json response;
     response["type"] = "SCSystemMessage";
-    // response["roomNumber"] = roomNumber;
     response["text"] = clientName + "님이 방에 입장했습니다.";
-    // response["participantNames"] = newRoom.participantNames; // Add participant names to the response
     SendMessage(clientSock, response.dump());
 
     // 생성된 방 정보 출력
@@ -315,6 +311,8 @@ void HandlerCommand(int clientSock, const string& msg){
     }
 }
 
+void ConsumeMessage(int clientSock);
+
 // Producer
 void ProduceMessage(int clientSock, const string& msg){
     cout << "[ProduceMessage] clientSock :  " << clientSock << ", message : " << msg << endl;
@@ -325,6 +323,8 @@ void ProduceMessage(int clientSock, const string& msg){
             msgQueFilled.notify_one();
         }
         cout << "[ProduceMessage] messageQueue Size : " << msgQueues[clientSock].size() << endl;
+
+        ConsumeMessage(clientSock);
     } catch (const exception& e){
         cerr << "Invalid JSON format: " << e.what() << endl;
     }
