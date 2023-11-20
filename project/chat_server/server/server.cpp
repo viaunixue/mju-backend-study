@@ -106,8 +106,12 @@ void SendMessage(int clientSock, const string& message) {
 
 void HandleNameChange(int clientSock, const AppMessage& message){
     cout << "[HandleNameChange] clientSock : " << clientSock << message.name << endl;
+
+    // 새로운 이름으로 변경 전의 클라이언트 이름 저장
+    string oldClientName = clientSocketToName[clientSock];
+
     if(clientSocks.find(clientSock) != clientSocks.end()){
-        // 클라이언트 이름을 맵에 저장
+        // 새 클라이언트 이름을 맵에 저장
         clientSocketToName[clientSock] = message.name;
 
         json response;
@@ -117,6 +121,25 @@ void HandleNameChange(int clientSock, const AppMessage& message){
         cout << "[HandleNameChange] response message: " << response.dump() << endl;
         
         SendMessage(clientSock, response.dump());
+    }
+
+    // 방에 이미 들어가 있는지 확인
+    auto currentRoomIt = find_if(chatRooms.begin(), chatRooms.end(), [clientSock](const ChatRoom& room){
+        return find(room.participantSockets.begin(), room.participantSockets.end(), clientSock) != room.participantSockets.end();
+    });
+
+    // 클라이언트 참여 중인 대화방 인덱스 찾기
+    int roomIndex = distance(chatRooms.begin(), currentRoomIt);
+
+    if (currentRoomIt != chatRooms.end()){
+        // 채팅 방 모든 멤버에게 이름 변경 시스템 메시지 전송
+        for (int participantSock : chatRooms[roomIndex].participantSockets){
+            json nameChangeNotification;
+            nameChangeNotification["type"] = "SCSystemMessage";
+            nameChangeNotification["text"] = oldClientName + " 님의 이름이 " + message.name + " 로 변경되었습니다.";
+            SendMessage(participantSock, nameChangeNotification.dump());
+        }
+        cout << "[HandleNameChange] " << oldClientName << " changed their name to " << message.name << " in room #" << chatRooms[roomIndex].roomNumber << endl;
     }
 }
 
@@ -133,12 +156,12 @@ void HandleRoomStatus(int clientSock, const AppMessage& message){
             roomInfo["title"] = room.roomTitle;
 
             // 참여 중인 멤버들의 이름을 배열로 저장
-            json participantNames;
-            for (const string& participant : room.participantNames) {
-                participantNames.push_back(participant);
+            vector<string> participants;
+            for (int participantSock : room.participantSockets){
+                participants.push_back(clientSocketToName[participantSock]);
             }
-            roomInfo["members"] = participantNames;
 
+            roomInfo["members"] = participants;
             response["rooms"].push_back(roomInfo);
         }
 
@@ -154,6 +177,7 @@ void HandleRoomCreate(int clientSock, const AppMessage& message){
 
     string clientName = clientSocketToName[clientSock];
     cout << "[HandleRoomCreate] clientName " << clientName << " " << endl;
+
     // 방 번호 생성 (간단한 예시로 현재 방 개수 + 1로 설정)
     int roomNumber = chatRooms.size() + 1;
 
@@ -203,7 +227,7 @@ void HandleRoomJoin(int clientSock, const AppMessage& message){
 
     // 유저가 이미 방에 들어가 있는 경우
     if(currentRoomIt != chatRooms.end()){
-        cerr << "[HandleRoomJoin] " << clientName << " is already in another room : " << endl;
+        cerr << "[HandleRoomJoin] " << clientName << " is already in another room." << endl;
 
         // 클라이언트에게 시스템 메시지 전송
         json errorResponse;
