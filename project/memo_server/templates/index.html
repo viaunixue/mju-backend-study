@@ -1,0 +1,171 @@
+<!Doctype html>
+<html lang="ko">
+
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css"
+      crossorigin="anonymous">
+
+		<!-- JS -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    <title> 메모장 </title>
+
+    <!-- style -->
+    <style type="text/css">
+      @import url(http://fonts.googleapis.com/earlyaccess/nanumgothic.css);
+
+      * {
+        font-family: "Nanum Gothic";
+      }
+
+      .container {
+        width: 900px;
+        margin: auto;
+      }
+
+      #login-box {
+        text-align: center;
+        margin: auto;
+      }
+
+      #new-memo-box {
+        width: 500px;
+        margin: 20px auto;
+        padding: 30px;
+        border: black solid;
+        border-radius: 6px;
+      }
+
+      .memo-text {
+        color: black;
+        font-weight: bold;
+      }
+    </style>
+    <script>
+      // 페이지가 처음 로딩 되었을 때 호출된다.
+      $(document).ready(function () {
+        {% if name %}
+          // 로그인 했다면 그 유저의 메모 리스트를 보여준다.
+          showMemosList();
+        {% else %}
+          // 로그인 한 적이 없다면 로그인 버튼을 보여준다.
+          showLoginButton();
+        {% endif %}
+      });
+
+      // 로그인 버튼을 보여준다.
+      function showLoginButton() {
+        $("#memos-box").html("");
+        $("#login-box").show();
+      }
+
+      // 로그인 버튼의 click event handler
+      function onLogin() {
+        window.location.replace("/login");
+      }
+
+      // 새 메모 버튼을 눌렀을 때 버튼이 토글되는 동작
+      function toggleNewMemoButton() {
+        if ($("#new-memo-box").css("display") == "block") {
+          $("#new-memo-box").hide();
+          $("#new-memo-text").val("");
+          $("#btn-new-memo-box").text("새 메모 쓰기");
+        } else {
+          $("#new-memo-box").show();
+          $("#btn-new-memo-box").text("메모 쓰기 취소");
+        }
+      }
+
+      // 새 메모 작성 완료를 눌렀을 때 event handler
+      function onNewMemo() {
+        let text = $("#new-memo-text").val();
+        $.ajax({
+          type: "POST",
+          url: "/memo",
+          headers: {
+            'Content-Type': 'application/json; charset=utf-8'
+          },
+          data: JSON.stringify({"text": text}),
+          success: function () {
+            // 새 메모 창 닫기
+            toggleNewMemoButton()
+            // 성공 시 페이지 새로고침하기
+            $("#memos-box").html("");
+            showMemosList()
+          },
+          error: function() {
+            // 새 메모 창 닫기
+            toggleNewMemoButton()
+            alert("새 메모 등록 실패 ㅠㅠ")
+          }
+        })
+      }
+
+      // 메모 데이터를 읽어오는 핸들러
+      function showMemosList() {
+        $.ajax({
+          type: "GET",
+          url: "/memo",
+          data: {},
+          success: function (response) {
+            let memos_list = response["memos"];
+            console.log(memos_list);
+            for (let i = 0; i < memos_list.length; i++) {
+              makeMemoCard(memos_list[i]["text"]);
+            }
+          }
+        })
+      }
+
+      function makeMemoCard(text) {
+        let tempHtml = `<div class="card">
+            <div class="card-body">
+              <p class="card-text memo-text">${text}</p>
+            </div>
+          </div>`;
+        $("#memos-box").append(tempHtml);
+      }
+    </script>
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="jumbotron">
+        {% if name %}
+        <h1 class="display-4">{{ name }}님의 메모장</h1>
+        <p>안녕하세요. 당신의 메모 목록입니다.</p>
+        {% else %}
+        <h1 class="display-4">개인 메모장</h1>
+        <p class="lead">개인적으로 메모를 남기는 공간입니다. 먼저 로그인 해주세요.</p>
+        {% endif %}
+        <hr class="my-4">
+        <p class="lead">
+          <button onclick="toggleNewMemoButton()" id="btn-new-memo-box" type="button" class="btn btn-primary">새 메모 쓰기
+          </button>
+        </p>
+      </div>
+
+      <div id="login-box" style="display:none">
+        <img src="/static/naver_login_button.png" width=200 onclick="onLogin()"></img>
+      </div>
+
+      <div id="new-memo-box" class="form-post" style="display:none">
+        <div>
+          <div class="form-group">
+            <label for="new-memo-text">메모 내용</label>
+            <textarea id="new-memo-text" class="form-control" rows="5"></textarea>
+          </div>
+          <button type="button" class="btn btn-primary" onclick="onNewMemo()">메모 저장</button>
+        </div>
+      </div>
+
+      <div id="memos-box" class="card-columns">
+      </div>
+    </div>
+  </body>
+</html>

@@ -67,9 +67,9 @@ constexpr int WORKER_THREAD_NUMBER = 5;
 atomic<bool> quit(false);
 
 // 공유 자원인 큐와 관련된 Mutex 및 조건 변수
-mutex msgQueuesMutex, clientSocksMutex, willCloseMutex;
+mutex msgQueuesMutex, willCloseMutex;
 condition_variable msgQueFilled;
-queue<string> msgQueue;
+// queue<string> msgQueue;
 
 // 동적으로 생성된 워커 쓰레드를 저장하기 위한 벡터
 vector<thread> workerThreads;
@@ -360,10 +360,14 @@ void ConsumeMessage(int clientSock){
 }
 
 void CloseClientSockets(){
+    unique_lock<mutex> ul(msgQueuesMutex);
     for (int clientSockNum : willClose){
         cout << "Close : " << clientSockNum << endl;
         close(clientSockNum);
-        // clientSocks.erase(clientSockNum);
+        clientSocks.erase(clientSockNum);
+
+        unique_lock<mutex> ulMsgQueues(msgQueuesMutex);
+        msgQueues.erase(clientSockNum);
     }
     willClose.clear(); // 클리어 후 다음 사용 위해 초기화
 }
@@ -379,7 +383,7 @@ void HandleClientConnection(int serverSock){
 
         // 클라이언트 소켓 추가하고 최대 소켓 번호 갱신
         {
-            unique_lock<mutex> ul(clientSocksMutex);
+            unique_lock<mutex> ul(msgQueuesMutex);
             for (int clientSock : clientSocks) {
                 FD_SET(clientSock, &rset);
                 if (clientSock > maxFd){
@@ -394,7 +398,7 @@ void HandleClientConnection(int serverSock){
             cerr << "[HandleClientConnection] select() failed : " << strerror(errno) << endl;
             if(errno == EBADF){
                 {
-                    unique_lock<mutex> ul(clientSocksMutex);
+                    unique_lock<mutex> ul(msgQueuesMutex);
                     for (auto it = clientSocks.begin(); it != clientSocks.end();){
                         int clientSock = *it;
                         if (!FD_ISSET(clientSock, &rset)) {
@@ -427,7 +431,7 @@ void HandleClientConnection(int serverSock){
                 cout << "Accepted connection from : " << clientAddr << " : " << clientPort << " (socket : " << clientSock << ")" << endl;
 
                 {
-                    unique_lock<mutex> ul(clientSocksMutex);
+                    unique_lock<mutex> ul(msgQueuesMutex);
                     clientSocks.insert(clientSock);
                 }
 
@@ -439,7 +443,7 @@ void HandleClientConnection(int serverSock){
         }
 
         {
-            unique_lock<mutex> ul(clientSocksMutex);
+            unique_lock<mutex> ul(msgQueuesMutex);
             for (int clientSock : clientSocks) {
                 if (!FD_ISSET(clientSock, &rset)){
                     continue;
@@ -488,7 +492,7 @@ void HandleClientConnection(int serverSock){
         // }
         // willClose.clear();
         {
-            unique_lock<mutex> ul(clientSocksMutex);
+            unique_lock<mutex> ul(msgQueuesMutex);
             for (int clientSockNum : willClose) {
                 cout << "Close : " << clientSockNum << endl;
                 close(clientSockNum);
@@ -509,7 +513,7 @@ void ShutdownServer() {
 
     // 클라이언트 소켓 닫기
     CloseClientSockets();
-    exit(0);
+    cout << "\nServer shutdown complete.\n";
 }
 
 int main(){
