@@ -38,6 +38,7 @@ enum MessageType {
     CSRooms,
     CSCreateRoom,
     CSJoinRoom,
+    CSLeaveRoom,
     // 다른 메세지 유형 이후 추가 
 };
 
@@ -47,6 +48,7 @@ static map<string, MessageType> stringToMessageType = {
     {"CSRooms", CSRooms},
     {"CSCreateRoom", CSCreateRoom},
     {"CSJoinRoom", CSJoinRoom},
+    {"CSLeaveRoom", CSLeaveRoom},
     // 다른 메세지 유형에 대한 매핑 추가
 };
 
@@ -77,6 +79,7 @@ map<int, queue<string>> msgQueues;
 // 클라이언트 소켓과 이름 매핑
 map<int, string> clientSocketToName;
 map<int, thread::id> threadIdMap;
+
 // 현재 연결된 client socket (active socket)
 set<int> clientSocks;
 set<int> willClose;
@@ -299,11 +302,70 @@ void HandleRoomJoin(int clientSock, const AppMessage& message){
     }
 }
 
+void HandleRoomLeave(int clientSock, const AppMessage& message){
+    cout << "[HandleRoomLeave] clientSock " << clientSock << " " << endl;
+    string clientName = clientSocketToName[clientSock];
+    
+    // 클라이언트가 참여중인 방 찾기
+    auto currentRoomIt = find_if(chatRooms.begin(), chatRooms.end(), [clientSock](const ChatRoom& room) {
+        return find(room.participantSockets.begin(), room.participantSockets.end(), clientSock) != room.participantSockets.end();
+    });
+
+    // 만약 클라이언트가 어떤 방도 참여 중이지 않다면 오류 메시지 전송
+    if (currentRoomIt == chatRooms.end()){
+        cerr << "[HandleRoomLeave] client is not in any room: " << clientSock << endl;
+        // 클라이언트에게 에러 메시지 전송
+        json errorResponse;
+        errorResponse["type"] = "SCSystemMessage";
+        errorResponse["text"] = clientName + "님이 참여 중인 대화방이 존재하지 않습니다.";
+        SendMessage(clientSock, errorResponse.dump());
+        return;
+    }
+
+    // 클라이언트 참여 중인 방 인덱스 찾기
+    int roomIndex = distance(chatRooms.begin(), currentRoomIt);
+
+    // 클라이언트를 방에서 제거
+    chatRooms[roomIndex]
+        .participantSockets
+        .erase(remove(chatRooms[roomIndex].participantSockets.begin(),
+                      chatRooms[roomIndex].participantSockets.end(),
+                      clientSock),
+                      chatRooms[roomIndex].participantSockets.end());
+    
+    // 클라이언트에게 채팅 방 시스템 메시지 전송
+    json leaveMessage;
+    leaveMessage["type"] = "SCSystemMessage";
+    leaveMessage["text"] = clientName + "님이 방을 나갔습니다.";
+    SendMessage(clientSock, leaveMessage.dump());
+
+    for (int participantSock : chatRooms[roomIndex].participantSockets) {
+        if (participantSock != clientSock){
+            json notification;
+            notification["type"] = "SCSystemMessage";
+            notification["text"] = clientName + "님이 방을 나갔습니다.";
+            SendMessage(participantSock, notification.dump());
+        }
+    }
+
+    if (chatRooms[roomIndex].participantSockets.empty()){
+        cout << "[HandleRoomLeave] Deleting room #" << chatRooms[roomIndex].roomNumber << "as there are no participants left." << endl;
+        chatRooms.erase(chatRooms.begin() + roomIndex);
+        json roomDeleteMessage;
+        roomDeleteMessage["type"] = "SCSystemMessage";
+        roomDeleteMessage["text"] = "사용자가 아무도 존재하지 않아 방을 삭제했습니다.";
+        SendMessage(clientSock, roomDeleteMessage.dump());
+    }
+
+    cout << "[HandleRoomLeave] " << clientName << " left room #" << chatRooms[roomIndex].roomNumber << endl;
+}
+
 static HandlerMap handlers {
     {CSName, HandleNameChange},
     {CSRooms, HandleRoomStatus},
     {CSCreateRoom, HandleRoomCreate},
     {CSJoinRoom, HandleRoomJoin},
+    {CSLeaveRoom, HandleRoomLeave},
     // 다른 메시지 유형 핸들러 추가 예정
 };
 
