@@ -7,7 +7,9 @@
 
 ## 📚 미니 프로젝트
 
-* [채팅 서버 만들기](https://github.com/almond0115/mju-backend-dev/blob/main/chat_server/server/README.md)
+* [채팅 서버 만들기](https://github.com/almond0115/mju-backend-dev/blob/main/project/chat_server/server/README.md)
+
+* [메모장 서비스 만들기](https://github.com/almond0115/mju-backend-dev/blob/main/project/memo_server/server/readme.md)
 
 ## 📝 과제 정리
 
