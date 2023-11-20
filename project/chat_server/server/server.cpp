@@ -178,6 +178,20 @@ void HandleRoomCreate(int clientSock, const AppMessage& message){
     string clientName = clientSocketToName[clientSock];
     cout << "[HandleRoomCreate] clientName " << clientName << " " << endl;
 
+    // 방에 이미 들어가 있는지 확인
+    auto currentRoomIt = find_if(chatRooms.begin(), chatRooms.end(), [clientSock](const ChatRoom& room){
+        return find(room.participantSockets.begin(), room.participantSockets.end(), clientSock) != room.participantSockets.end();
+    });
+
+    if (currentRoomIt != chatRooms.end()){
+        json roomNotification;
+        roomNotification["type"] = "SCSystemMessage";
+        roomNotification["text"] = clientName + " 님은 다른 대화방에 이미 참여중입니다.";
+        SendMessage(clientSock, roomNotification.dump());
+        return;
+    }
+
+
     // 방 번호 생성 (간단한 예시로 현재 방 개수 + 1로 설정)
     int roomNumber = chatRooms.size() + 1;
 
@@ -232,7 +246,7 @@ void HandleRoomJoin(int clientSock, const AppMessage& message){
         // 클라이언트에게 시스템 메시지 전송
         json errorResponse;
         errorResponse["type"] = "SCSystemMessage";
-        errorResponse["text"] = clientName + "님은 이미 다른 방에 참가하셨습니다.";
+        errorResponse["text"] = clientName + "님은 이미 다른 방에 참여 중이므로 방을 개설할 수 없습니다.";
         SendMessage(clientSock, errorResponse.dump());
         return;
     }
