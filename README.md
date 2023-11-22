@@ -7,9 +7,9 @@
 
 ## 📚 미니 프로젝트
 
-* [채팅 서버 만들기](https://github.com/almond0115/mju-backend-dev/blob/main/project/chat_server/server/README.md)
+1️⃣ [채팅 서버 만들기](https://github.com/almond0115/mju-backend-dev/blob/main/project/chat_server/server/README.md)
 
-* [메모장 서비스 만들기](https://github.com/almond0115/mju-backend-dev/blob/main/project/memo_server/server/readme.md)
+2️⃣ [메모장 서비스 만들기](https://github.com/almond0115/mju-backend-dev/blob/main/project/memo_server/readme.md)
 
 ## 📝 과제 정리
 
@@ -28,6 +28,10 @@
 * LAB-8 : [Framework - Python Flask](https://github.com/almond0115/mju-backend-dev/blob/main/lab8/README.md)
 
 ## 🤔 공부 기록 
+
+* [[11/20] Load Balancer](https://github.com/almond0115/mju-backend-dev/blob/main/study/load_balancer.md)
+
+* [[11/18] Deployment & Docker & Docker Hub](https://github.com/almond0115/mju-backend-dev/blob/main/study/docker.md)
 
 * [[11/16] Redis : State 저장을 위한 in-memory DB](https://github.com/almond0115/mju-backend-dev/blob/main/study/redis.md)
 
