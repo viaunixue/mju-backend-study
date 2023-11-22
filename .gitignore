@@ -207,6 +207,6 @@ poetry.toml
 pyrightconfig.json
 
 # Finder
-.DS_Store
+*.DS_Store
 
 # End of https://www.toptal.com/developers/gitignore/api/c++,python
