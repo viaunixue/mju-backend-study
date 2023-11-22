@@ -38,6 +38,7 @@ enum MessageType {
     CSRooms,
     CSCreateRoom,
     CSJoinRoom,
+    CSLeaveRoom,
     // 다른 메세지 유형 이후 추가 
 };
 
@@ -47,6 +48,7 @@ static map<string, MessageType> stringToMessageType = {
     {"CSRooms", CSRooms},
     {"CSCreateRoom", CSCreateRoom},
     {"CSJoinRoom", CSJoinRoom},
+    {"CSLeaveRoom", CSLeaveRoom},
     // 다른 메세지 유형에 대한 매핑 추가
 };
 
@@ -69,7 +71,6 @@ atomic<bool> quit(false);
 // 공유 자원인 큐와 관련된 Mutex 및 조건 변수
 mutex msgQueuesMutex, willCloseMutex;
 condition_variable msgQueFilled;
-// queue<string> msgQueue;
 
 // 동적으로 생성된 워커 쓰레드를 저장하기 위한 벡터
 vector<thread> workerThreads;
@@ -77,6 +78,8 @@ map<int, queue<string>> msgQueues;
 
 // 클라이언트 소켓과 이름 매핑
 map<int, string> clientSocketToName;
+map<int, thread::id> threadIdMap;
+
 // 현재 연결된 client socket (active socket)
 set<int> clientSocks;
 set<int> willClose;
@@ -106,18 +109,40 @@ void SendMessage(int clientSock, const string& message) {
 
 void HandleNameChange(int clientSock, const AppMessage& message){
     cout << "[HandleNameChange] clientSock : " << clientSock << message.name << endl;
+
+    // 새로운 이름으로 변경 전의 클라이언트 이름 저장
+    string oldClientName = clientSocketToName[clientSock];
+
     if(clientSocks.find(clientSock) != clientSocks.end()){
-        // 클라이언트 이름을 맵에 저장
+        // 새 클라이언트 이름을 맵에 저장
         clientSocketToName[clientSock] = message.name;
 
         json response;
         response["type"] = "SCSystemMessage";
         response["text"] = "이름이 " + message.name + "로 변경되었습니다.";
-        // response["text"] = "이름이 " + static_cast<string>(newNickname) + "으로 변경되었습니다.";
 
         cout << "[HandleNameChange] response message: " << response.dump() << endl;
         
         SendMessage(clientSock, response.dump());
+    }
+
+    // 방에 이미 들어가 있는지 확인
+    auto currentRoomIt = find_if(chatRooms.begin(), chatRooms.end(), [clientSock](const ChatRoom& room){
+        return find(room.participantSockets.begin(), room.participantSockets.end(), clientSock) != room.participantSockets.end();
+    });
+
+    // 클라이언트 참여 중인 대화방 인덱스 찾기
+    int roomIndex = distance(chatRooms.begin(), currentRoomIt);
+
+    if (currentRoomIt != chatRooms.end()){
+        // 채팅 방 모든 멤버에게 이름 변경 시스템 메시지 전송
+        for (int participantSock : chatRooms[roomIndex].participantSockets){
+            json nameChangeNotification;
+            nameChangeNotification["type"] = "SCSystemMessage";
+            nameChangeNotification["text"] = oldClientName + " 님의 이름이 " + message.name + " 로 변경되었습니다.";
+            SendMessage(participantSock, nameChangeNotification.dump());
+        }
+        cout << "[HandleNameChange] " << oldClientName << " changed their name to " << message.name << " in room #" << chatRooms[roomIndex].roomNumber << endl;
     }
 }
 
@@ -134,12 +159,12 @@ void HandleRoomStatus(int clientSock, const AppMessage& message){
             roomInfo["title"] = room.roomTitle;
 
             // 참여 중인 멤버들의 이름을 배열로 저장
-            json participantNames;
-            for (const string& participant : room.participantNames) {
-                participantNames.push_back(participant);
+            vector<string> participants;
+            for (int participantSock : room.participantSockets){
+                participants.push_back(clientSocketToName[participantSock]);
             }
-            roomInfo["members"] = participantNames;
 
+            roomInfo["members"] = participants;
             response["rooms"].push_back(roomInfo);
         }
 
@@ -152,10 +177,24 @@ void HandleRoomStatus(int clientSock, const AppMessage& message){
 void HandleRoomCreate(int clientSock, const AppMessage& message){
     cout << "[HandleRoomCreate] clientSock " << clientSock << " " << endl;
     cout << "[HandleRoomCreate] message.roomTitle " << message.roomTitle << " " << endl;
-    cout << "[HandleRoomCreate] message.name " << message.name << " " << endl;
 
     string clientName = clientSocketToName[clientSock];
     cout << "[HandleRoomCreate] clientName " << clientName << " " << endl;
+
+    // 방에 이미 들어가 있는지 확인
+    auto currentRoomIt = find_if(chatRooms.begin(), chatRooms.end(), [clientSock](const ChatRoom& room){
+        return find(room.participantSockets.begin(), room.participantSockets.end(), clientSock) != room.participantSockets.end();
+    });
+
+    if (currentRoomIt != chatRooms.end()){
+        json roomNotification;
+        roomNotification["type"] = "SCSystemMessage";
+        roomNotification["text"] = clientName + " 님은 다른 대화방에 이미 참여중입니다.";
+        SendMessage(clientSock, roomNotification.dump());
+        return;
+    }
+
+
     // 방 번호 생성 (간단한 예시로 현재 방 개수 + 1로 설정)
     int roomNumber = chatRooms.size() + 1;
 
@@ -172,9 +211,7 @@ void HandleRoomCreate(int clientSock, const AppMessage& message){
     // 클라이언트에게 채팅방 생성 성공 메세지 전송
     json response;
     response["type"] = "SCSystemMessage";
-    // response["roomNumber"] = roomNumber;
     response["text"] = clientName + "님이 방에 입장했습니다.";
-    // response["participantNames"] = newRoom.participantNames; // Add participant names to the response
     SendMessage(clientSock, response.dump());
 
     // 생성된 방 정보 출력
@@ -199,6 +236,23 @@ void HandleRoomJoin(int clientSock, const AppMessage& message){
     auto roomIt = find_if(chatRooms.begin(), chatRooms.end(), [targetRoomId](const ChatRoom& room){
         return room.roomNumber == targetRoomId;
     });
+
+    // 방에 이미 들어가 있는지 확인
+    auto currentRoomIt = find_if(chatRooms.begin(), chatRooms.end(), [clientSock](const ChatRoom& room){
+        return find(room.participantSockets.begin(), room.participantSockets.end(), clientSock) != room.participantSockets.end();
+    });
+
+    // 유저가 이미 방에 들어가 있는 경우
+    if(currentRoomIt != chatRooms.end()){
+        cerr << "[HandleRoomJoin] " << clientName << " is already in another room." << endl;
+
+        // 클라이언트에게 시스템 메시지 전송
+        json errorResponse;
+        errorResponse["type"] = "SCSystemMessage";
+        errorResponse["text"] = clientName + "님은 이미 다른 방에 참여 중이므로 방을 개설할 수 없습니다.";
+        SendMessage(clientSock, errorResponse.dump());
+        return;
+    }
 
     // 방이 존재하는 경우
     if (roomIt != chatRooms.end()){
@@ -227,10 +281,10 @@ void HandleRoomJoin(int clientSock, const AppMessage& message){
                 }
             }
 
-            cout << "[HandleRoomJoin] Client joined room #" << targetRoomId << ": " << message.name << endl;
+            cout << "[HandleRoomJoin] " << clientName << " joined room #" << targetRoomId << endl;
         } else {
             // 이미 참가한 경우
-            cerr << "[HandleRoomJoin] Client is already in the room #" << targetRoomId << ": " << message.name << endl;
+            cerr << "[HandleRoomJoin] Client is already in the room #" << targetRoomId << ": " << clientName << endl;
             // 클라이언트에게 에러 메시지 전송
             json errorResponse;
             errorResponse["type"] = "SCSystemMessage";
@@ -248,11 +302,70 @@ void HandleRoomJoin(int clientSock, const AppMessage& message){
     }
 }
 
+void HandleRoomLeave(int clientSock, const AppMessage& message){
+    cout << "[HandleRoomLeave] clientSock " << clientSock << " " << endl;
+    string clientName = clientSocketToName[clientSock];
+    
+    // 클라이언트가 참여중인 방 찾기
+    auto currentRoomIt = find_if(chatRooms.begin(), chatRooms.end(), [clientSock](const ChatRoom& room) {
+        return find(room.participantSockets.begin(), room.participantSockets.end(), clientSock) != room.participantSockets.end();
+    });
+
+    // 만약 클라이언트가 어떤 방도 참여 중이지 않다면 오류 메시지 전송
+    if (currentRoomIt == chatRooms.end()){
+        cerr << "[HandleRoomLeave] client is not in any room: " << clientSock << endl;
+        // 클라이언트에게 에러 메시지 전송
+        json errorResponse;
+        errorResponse["type"] = "SCSystemMessage";
+        errorResponse["text"] = clientName + "님이 참여 중인 대화방이 존재하지 않습니다.";
+        SendMessage(clientSock, errorResponse.dump());
+        return;
+    }
+
+    // 클라이언트 참여 중인 방 인덱스 찾기
+    int roomIndex = distance(chatRooms.begin(), currentRoomIt);
+
+    // 클라이언트를 방에서 제거
+    chatRooms[roomIndex]
+        .participantSockets
+        .erase(remove(chatRooms[roomIndex].participantSockets.begin(),
+                      chatRooms[roomIndex].participantSockets.end(),
+                      clientSock),
+                      chatRooms[roomIndex].participantSockets.end());
+    
+    // 클라이언트에게 채팅 방 시스템 메시지 전송
+    json leaveMessage;
+    leaveMessage["type"] = "SCSystemMessage";
+    leaveMessage["text"] = clientName + "님이 방을 나갔습니다.";
+    SendMessage(clientSock, leaveMessage.dump());
+
+    for (int participantSock : chatRooms[roomIndex].participantSockets) {
+        if (participantSock != clientSock){
+            json notification;
+            notification["type"] = "SCSystemMessage";
+            notification["text"] = clientName + "님이 방을 나갔습니다.";
+            SendMessage(participantSock, notification.dump());
+        }
+    }
+
+    if (chatRooms[roomIndex].participantSockets.empty()){
+        cout << "[HandleRoomLeave] Deleting room #" << chatRooms[roomIndex].roomNumber << "as there are no participants left." << endl;
+        chatRooms.erase(chatRooms.begin() + roomIndex);
+        json roomDeleteMessage;
+        roomDeleteMessage["type"] = "SCSystemMessage";
+        roomDeleteMessage["text"] = "사용자가 아무도 존재하지 않아 방을 삭제했습니다.";
+        SendMessage(clientSock, roomDeleteMessage.dump());
+    }
+
+    cout << "[HandleRoomLeave] " << clientName << " left room #" << chatRooms[roomIndex].roomNumber << endl;
+}
+
 static HandlerMap handlers {
     {CSName, HandleNameChange},
     {CSRooms, HandleRoomStatus},
     {CSCreateRoom, HandleRoomCreate},
     {CSJoinRoom, HandleRoomJoin},
+    {CSLeaveRoom, HandleRoomLeave},
     // 다른 메시지 유형 핸들러 추가 예정
 };
 
@@ -315,6 +428,8 @@ void HandlerCommand(int clientSock, const string& msg){
     }
 }
 
+void ConsumeMessage(int clientSock);
+
 // Producer
 void ProduceMessage(int clientSock, const string& msg){
     cout << "[ProduceMessage] clientSock :  " << clientSock << ", message : " << msg << endl;
@@ -325,14 +440,28 @@ void ProduceMessage(int clientSock, const string& msg){
             msgQueFilled.notify_one();
         }
         cout << "[ProduceMessage] messageQueue Size : " << msgQueues[clientSock].size() << endl;
+
+        ConsumeMessage(clientSock);
     } catch (const exception& e){
         cerr << "Invalid JSON format: " << e.what() << endl;
+        // 예외가 발생한 경우 클라이언트 소켓을 안전하게 닫음
+        unique_lock<mutex> ul(msgQueuesMutex);
+        cout << "Closing socket due to exception: " << clientSock << endl;
+        close(clientSock);
+        clientSocks.erase(clientSock);
+        msgQueues.erase(clientSock);
     }
 }
 
 // Consumer
 void ConsumeMessage(int clientSock){
     cout << "[ConsumeMessage] socket: " << clientSock << endl;
+    std::thread::id cosumeThreadId = this_thread::get_id(); // 현재 쓰레드
+    {
+        unique_lock<mutex> ul(msgQueuesMutex);
+        threadIdMap[clientSock] = cosumeThreadId; // 맵에 쓰레드 ID 추가
+    }
+
     while(!quit.load()){
         cout << "[ConsumeMessage] socket enter the loop : " << clientSock << endl;
         string message;
@@ -357,6 +486,11 @@ void ConsumeMessage(int clientSock){
         }
     }
     cout <<  "[ConsumeMessage] Consume finished : " << clientSock << endl;
+
+    {
+        unique_lock<mutex> ul(msgQueuesMutex);
+        threadIdMap.erase(clientSock); // 맵에서 쓰레드 ID 제거
+    }
 }
 
 void CloseClientSockets(){
@@ -385,32 +519,81 @@ void HandleClientConnection(int serverSock){
         {
             unique_lock<mutex> ul(msgQueuesMutex);
             for (int clientSock : clientSocks) {
+                // 소켓 유효성 확인
+                if(clientSock <= 0){
+                    continue;
+                }
                 FD_SET(clientSock, &rset);
                 if (clientSock > maxFd){
                     maxFd = clientSock;   
                 }
             }
         }
-         
+
+        cout << "[HandleClientConnection] rset status before select(): ";
+        for (int clientSock : clientSocks) {
+            cout << (FD_ISSET(clientSock, &rset) ? "1" : "0") << ":";
+        }
+        cout << endl;
+
         // select()
         int numReady = select(maxFd + 1, &rset, NULL, NULL, NULL);
+
+        // select() 이후 로그
+        cout << "[HandleClientConnection] rset status after select(): ";
+        for (int clientSock : clientSocks) {
+            cout << (FD_ISSET(clientSock, &rset) ? "1" : "0") << ":";
+        }
+        cout << endl;
+        
         if(numReady < 0){
             cerr << "[HandleClientConnection] select() failed : " << strerror(errno) << endl;
             if(errno == EBADF){
                 {
+                    // client 소켓이 종료된 경우
+                    cerr << "[HandleClientConnection] EBADF : " << errno << endl;
                     unique_lock<mutex> ul(msgQueuesMutex);
                     for (auto it = clientSocks.begin(); it != clientSocks.end();){
                         int clientSock = *it;
+                        cout << "[HandleClientConnection] clientSock : " << clientSock << endl;
                         if (!FD_ISSET(clientSock, &rset)) {
-                            cout << "Closing socket : " << clientSock << endl;
-                            close(clientSock);
+                            
+                            cerr << "[HandleClientConnection] Closing socket : " << clientSock << endl;
+
+                            // 종료 메시지를 큐에 추가
+                            msgQueues[clientSock].push("EXIT_MESSAGE");
+                            msgQueFilled.notify_one();
+
+                            // 클라이언트 종료
+                            try {
+                                close(clientSock);
+                            } catch (const exception& e){
+                                cerr << "[HandleClientConnection] Error closing socket : " << e.what() << endl;
+                            }
+
+                            // 쓰레드 종료
+                            auto threadIt = find_if(workerThreads.begin(), workerThreads.end(), [clientSock](const thread& t){
+                                unique_lock<mutex> ul(msgQueuesMutex);
+                                return t.joinable() && t.get_id() == threadIdMap[clientSock];
+                            });
+
+                            if (threadIt != workerThreads.end()) {
+                                threadIt->join();
+                                workerThreads.erase(threadIt);
+                            }
+
+                            // 해당 소켓의 큐도 정리
                             it = clientSocks.erase(it);
+                            msgQueues.erase(clientSock);
+                            threadIdMap.erase(clientSock);
+
+                            cout << "[HandleClientConnection] Socket closed and cleaned up: " << clientSock << endl;
                         } else {
+                            cout << "[HandleClientConnection] FD_ISSET : " << clientSock << endl;
                             ++it;
                         }
                     }
                 }
-                
             }
         } else if (numReady == 0){
             continue;
@@ -429,7 +612,6 @@ void HandleClientConnection(int serverSock){
                 inet_ntop(AF_INET, &(sin.sin_addr), clientAddr, INET_ADDRSTRLEN);
                 int clientPort = ntohs(sin.sin_port);
                 cout << "Accepted connection from : " << clientAddr << " : " << clientPort << " (socket : " << clientSock << ")" << endl;
-
                 {
                     unique_lock<mutex> ul(msgQueuesMutex);
                     clientSocks.insert(clientSock);
@@ -480,17 +662,6 @@ void HandleClientConnection(int serverSock){
             }
         }
 
-        // 닫아야 하는 소켓 정리
-        // for (int clientSock : willClose){
-        //     cout << "Close : " << clientSock << endl;
-        //     close(clientSock);
-        //     clientSocks.erase(clientSock);
-        //     {
-        //         unique_lock<mutex> ul(msgQueuesMutex);
-        //         msgQueues.erase(clientSock);
-        //     }
-        // }
-        // willClose.clear();
         {
             unique_lock<mutex> ul(msgQueuesMutex);
             for (int clientSockNum : willClose) {
@@ -516,12 +687,14 @@ void ShutdownServer() {
     cout << "\nServer shutdown complete.\n";
 }
 
+void HandleSIGINT(int){
+    cout << "\nReceived SIGINT, shutting down server...\n";
+    ShutdownServer();
+    exit(0);
+}
+
 int main(){
-    signal(SIGINT, [](int) {
-        cout << "\nReceived SIGINT, shutting down server...\n";
-        ShutdownServer();
-        exit(0);
-    });
+    signal(SIGINT, HandleSIGINT);
 
     int passiveSock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 
