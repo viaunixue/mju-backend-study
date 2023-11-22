@@ -249,3 +249,80 @@ key 에 대응되는 value 저장소 역할을 합니다. (= `레코드 별로 �
 
     > JSON.GET USER:dkmoon .email 
     &rarr; JSON 중 email 이란 필드
+
+
+## Redis 에서 Transaction #1
+
+### `MULTI` 명령어로 transaction 시작을 알립니다.
+
+### `EXEC` 명령어로 `MULTI` 이후 명령들을 묶어 하나의 transaction 으로 실행 시도합니다.
+
+### `MULTI` 와 `EXEC` 사이 명령들은 바로 실행되는 것이 아니라 `EXEC 전까지 queue` 됩니다.
+
+```
+> MULTI
+OK
+> INCR foo
+QUEUED
+> INCR bar
+QUEUED
+> EXEC
+1) (integer) 1
+2) (integer) 2
+```
+
+## Redis 에서 Transaction #2
+
+### `MULTI` 명령을 했더라도 `DISCARD` 로 transaction 취소가 가능합니다.
+
+```
+> SET foo 1
+OK
+> MULTI
+OK
+> INCR foo
+QUEUED
+> DISCARD
+OK
+> GET foo 
+"1"
+```
+
+## Redis 에서 Transaction #3
+
+### `MULTI` - `EXEC` 구조는 쓰기 명령들을 연속으로 실행할 때는 유용합니다.
+
+그런데 읽기 작업 후 가공하는 연산은 Redis 가 아닌 그걸 읽어간 서버가 합니다.
+
+**따라서 아래와 같은 패턴이 성립되지 않습니다.**
+```
+> MULTI
+> GET foo
+> SET foo <-- how?
+> EXEC
+```
+#### update 된 값. 근데 어떻게 만들어내지? 서버는 EXEC을 마쳐야 GET 하는거 아니야?
+
+### &rarr; 이런 경우 `WATCH` 명령을 씁니다.
+
+### `WATCH`는 나중에 EXEC 실행 시 그간 `WATCH` 대상 key 가 변경되었는지 검증해줍니다. <br>
+(바뀐 경우 EXEC 는 Null 응답을 반환합니다.)
+```
+> WATCH foo
+> GET foo
+
+(서버는 foo 값을 가지고 연산 할 것입니다.)
+
+> MULTI
+> SET foo
+```
+
+```
+SQL은 일단 뭔가가 바뀔거라고 가정하고 lock 부터 겁니다.
+Redis는 lock 부터 걸지 않습니다. 그렇게 사용하는 대신 다음에 내가 이걸 가지고 
+Transaction 을 시작할 때 그 떄 잘못 됐으면 그 때 알려줘 라고 이야기 합니다.
+SQL 에서 lock 을 걸고 작업하는 성질 떄문에 NOSQL에서는 optimistic locking을 선호합니다.
+이걸로 더 많은 throughput을 확보할 수 있습니다. 
+만약에 굉장히 빈번하게 동일한 변수를 접근한다면, 실제로 NOSQL은 throughput이 확 떨어집니다.
+```
+&rarr; 만약 SQL과 NOSQL 선택을 해야하는데 어떤 데이터 Record가 같은 데이터 Record를 경합하는 경우 <br> 같이 접근하는 경우가 굉장히 빈번하다면 SQL을 사용하는게 효율적입니다.
