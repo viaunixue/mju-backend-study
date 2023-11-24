@@ -86,9 +86,6 @@ def onOAuthAuthorizationCodeRedirected():
 
     token_response = requests.post(token_uri, data = token_params)
 
-    # if token_response.status_code != HTTPStatus.OK:
-    #     abort(HTTPStatus.INTERNAL_SERVER_ERROR)
-
     print(f"token_response: {token_response}")
 
     token_data = token_response.json()
@@ -104,9 +101,6 @@ def onOAuthAuthorizationCodeRedirected():
     profile_response = requests.get(profile_url, headers = headers)
 
     print(f"profile_response: {profile_response}")
-
-    # if profile_response.status_code != HTTPStatus.OK:
-    #     abort(HTTPStatus.INTERNAL_SERVER_ERROR)
 
     profile_data = profile_response.json()
     user_id = profile_data.get('response', {}).get('id')
@@ -124,14 +118,18 @@ def onOAuthAuthorizationCodeRedirected():
 def get_memos():
     # 로그인이 안되어 있다면 로그인 하도록 첫 페이지로 redirect 해준다.
     userId = request.cookies.get('userId', default=None)
+
+    print(f"userId: {userId}")
+
     if not userId:
         return redirect('/')
 
     # TODO: DB 에서 해당 userId 의 메모들을 읽어오도록 아래를 수정한다.
     user_memos_key = f'user:{userId}:memos'
     memos = redis_client.lrange(user_memos_key, 0, -1)
-    # result = []
     memos = [memo.decode('utf8') for memo in memos]
+
+    print(f"memos: {memos}")
 
     # memos라는 키 값으로 메모 목록 보내주기
     return jsonify({'memos': memos or []})
@@ -151,11 +149,12 @@ def post_new_memo():
     # TODO: 클라이언트로부터 받은 JSON 에서 메모 내용을 추출한 후 DB에 userId 의 메모로 추가한다.
     memo_content = request.json.get('text')
 
+    print(f"memo_content: {memo_content}")
+
     user_memos_key = f'user:{userId}:memos'
     redis_client.rpush(user_memos_key, memo_content)
 
     return '', HTTPStatus.OK
-    # return jsonify({'status':'success'})
 
 if __name__ == '__main__':
     app.run('0.0.0.0', port=8000, debug=True)

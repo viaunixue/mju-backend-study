@@ -5,7 +5,7 @@
 ![docker_1](/asset/img/lab9/1.png)
 
 ```
-$ docker build -t mju:1
+$ docker build -t mju:1 .
 ```
 
 * `docker build` 는 새 docker image 를 만드는 명령어입니다.

@@ -116,7 +116,7 @@
             let memos_list = response["memos"];
             console.log(memos_list);
             for (let i = 0; i < memos_list.length; i++) {
-              makeMemoCard(memos_list[i]["text"]);
+              makeMemoCard(memos_list[i]);
             }
           }
         })
