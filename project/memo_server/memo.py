@@ -4,19 +4,20 @@ import requests
 import json
 import urllib
 
-from flask import abort, Flask, make_response, render_template, Response, redirect, request
+from redis import StrictRedis
+from flask import abort, Flask, make_response, render_template, Response, redirect, request, jsonify
 
 app = Flask(__name__)
+redis_client = StrictRedis(host='localhost', port=6379, db=0)
 
-
-naver_client_id = '본인 app 의 것으로 교체할 것'
-naver_client_secret = '본인 app 의 것으로 교체할 것'
-naver_redirect_uri = '''
+naver_client_id = 'bop3C73HErShvaWh5AT2'
+naver_client_secret = '6IdFnhihKH'
+naver_redirect_uri = 'http://localhost:8000/auth'
+'''
   본인 app 의 것으로 교체할 것.
   여기 지정된 url 이 http://localhost:8000/auth 처럼 /auth 인 경우
   아래 onOAuthAuthorizationCodeRedirected() 에 @app.route('/auth') 태깅한 것처럼 해야 함
 '''
-
 
 @app.route('/')
 def home():
@@ -25,16 +26,12 @@ def home():
     # user profile REST api 를 통해 유저 정보를 얻어낸 뒤 'userId' 라는 cookie 를 지정해야 된다.
     # (참고: 아래 onOAuthAuthorizationCodeRedirected() 마지막 부분 response.set_cookie('userId', user_id) 참고)
     userId = request.cookies.get('userId', default=None)
-    name = None
 
     ####################################################
     # TODO: 아래 부분을 채워 넣으시오.
-    #       userId 로부터 DB 에서 사용자 이름을 얻어오는 코드를 여기에 작성해야 함
-
-
-
+    # userId 로부터 DB 에서 사용자 이름을 얻어오는 코드를 여기에 작성해야 함
+    name = redis_client.get(userId).decode('utf8') if userId else None
     ####################################################
-
 
     # 이제 클라에게 전송해 줄 index.html 을 생성한다.
     # template 로부터 받아와서 name 변수 값만 교체해준다.
@@ -49,9 +46,10 @@ def home():
 # 아래처럼 서버가 주는 URL 로 redirect 하는 것으로 처리한다.
 #
 # 주의! 아래 API 는 잘 동작하기 때문에 손대지 말 것
+
 @app.route('/login')
 def onLogin():
-    params={
+    params = {
             'response_type': 'code',
             'client_id': naver_client_id,
             'redirect_uri': naver_redirect_uri,
@@ -70,21 +68,51 @@ def onOAuthAuthorizationCodeRedirected():
     # TODO: 아래 1 ~ 4 를 채워 넣으시오.
 
     # 1. redirect uri 를 호출한 request 로부터 authorization code 와 state 정보를 얻어낸다.
+    authorization_code = request.args.get('code')
+    state = request.args.get('state')
 
-
+    print(f"authorization_code: {authorization_code}")
+    print(f"state: {state}")
 
     # 2. authorization code 로부터 access token 을 얻어내는 네이버 API 를 호출한다.
+    token_uri = "https://nid.naver.com/oauth2.0/token"
+    token_params = {
+        'grant_type' : 'authorization_code',
+        'client_id' : naver_client_id,
+        'client_secret' : naver_client_secret,
+        'code' : authorization_code,
+        'state' : state,
+    }
 
+    token_response = requests.post(token_uri, data = token_params)
+
+    # if token_response.status_code != HTTPStatus.OK:
+    #     abort(HTTPStatus.INTERNAL_SERVER_ERROR)
+
+    print(f"token_response: {token_response}")
+
+    token_data = token_response.json()
+    access_token = token_data.get('access_token')
 
 
     # 3. 얻어낸 access token 을 이용해서 프로필 정보를 반환하는 API 를 호출하고,
     #    유저의 고유 식별 번호를 얻어낸다.
+    profile_url = "https://openapi.naver.com/v1/nid/me"
+    headers = {
+        'Authorization' : f'Bearer {access_token}',
+    }
+    profile_response = requests.get(profile_url, headers = headers)
 
+    print(f"profile_response: {profile_response}")
+
+    # if profile_response.status_code != HTTPStatus.OK:
+    #     abort(HTTPStatus.INTERNAL_SERVER_ERROR)
+
+    profile_data = profile_response.json()
+    user_id = profile_data.get('response', {}).get('id')
 
     # 4. 얻어낸 user id 와 name 을 DB 에 저장한다.
-    user_id = None
-    user_name = None
-
+    redis_client.set(user_id, profile_data.get('response', {}).get('name'))
 
     # 5. 첫 페이지로 redirect 하는데 로그인 쿠키를 설정하고 보내준다.
     response = redirect('/')
@@ -100,10 +128,13 @@ def get_memos():
         return redirect('/')
 
     # TODO: DB 에서 해당 userId 의 메모들을 읽어오도록 아래를 수정한다.
-    result = []
+    user_memos_key = f'user:{userId}:memos'
+    memos = redis_client.lrange(user_memos_key, 0, -1)
+    # result = []
+    memos = [memo.decode('utf8') for memo in memos]
 
     # memos라는 키 값으로 메모 목록 보내주기
-    return {'memos': result}
+    return jsonify({'memos': memos or []})
 
 
 @app.route('/memo', methods=['POST'])
@@ -118,10 +149,13 @@ def post_new_memo():
         abort(HTTPStatus.BAD_REQUEST)
 
     # TODO: 클라이언트로부터 받은 JSON 에서 메모 내용을 추출한 후 DB에 userId 의 메모로 추가한다.
+    memo_content = request.json.get('text')
 
-    #
+    user_memos_key = f'user:{userId}:memos'
+    redis_client.rpush(user_memos_key, memo_content)
+
     return '', HTTPStatus.OK
-
+    # return jsonify({'status':'success'})
 
 if __name__ == '__main__':
     app.run('0.0.0.0', port=8000, debug=True)
