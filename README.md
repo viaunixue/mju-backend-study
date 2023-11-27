@@ -29,6 +29,10 @@
 
 ## 🤔 공부 기록 
 
+* [[11/27] Scaling](https://github.com/almond0115/mju-backend-dev/blob/main/study/scaling.md)
+
+* [[11/25] Memo Service 배포 실습](https://github.com/almond0115/mju-backend-dev/blob/main/project/memo_server/elb.md)
+
 * [[11/20] Load Balancer](https://github.com/almond0115/mju-backend-dev/blob/main/study/load_balancer.md)
 
 * [[11/18] Deployment & Docker & Docker Hub](https://github.com/almond0115/mju-backend-dev/blob/main/study/docker.md)
