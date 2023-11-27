@@ -29,6 +29,10 @@
 
 ## 🤔 공부 기록 
 
+* [[11/28] Message Queue](https://github.com/almond0115/mju-backend-dev/blob/main/study/message_queue.md)
+
+* [[11/27] RPC](https://github.com/almond0115/mju-backend-dev/blob/main/study/rpc.md) 
+
 * [[11/27] Scaling](https://github.com/almond0115/mju-backend-dev/blob/main/study/scaling.md)
 
 * [[11/25] Memo Service 배포 실습](https://github.com/almond0115/mju-backend-dev/blob/main/project/memo_server/elb.md)
