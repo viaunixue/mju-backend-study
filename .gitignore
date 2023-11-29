@@ -206,6 +206,9 @@ poetry.toml
 # LSP config files
 pyrightconfig.json
 
+# naver config files
+config.json
+
 # Finder
 *.DS_Store
 

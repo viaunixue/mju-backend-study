@@ -3,16 +3,24 @@ import random
 import requests
 import json
 import urllib
+import logging
+import os
 
 from redis import StrictRedis
 from flask import abort, Flask, make_response, render_template, Response, redirect, request, jsonify
 
 app = Flask(__name__)
-redis_client = StrictRedis(host='localhost', port=6379, db=0)
 
-naver_client_id = 'D5qE5r_gW9ImHzTarDkD'
-naver_client_secret = 'OVy795S8M5'
-naver_redirect_uri = 'http://localhost:8000/memo/memo/auth'
+with open('config.json', 'r') as config_file:
+    config_data = json.load(config_file)
+
+naver_client_id = config_data.get('naver_client_id')
+naver_client_secret = config_data.get('naver_client_secret')
+naver_redirect_uri = config_data.get('naver_redirect_uri')
+redis_ip_address = config_data.get('redis_ip_address')
+redis_port = config_data.get('redis_port')
+
+redis_client = StrictRedis(host=redis_ip_address, port=redis_port, db=0)
 '''
   본인 app 의 것으로 교체할 것.
   여기 지정된 url 이 http://localhost:8000/auth 처럼 /auth 인 경우
