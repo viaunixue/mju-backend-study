@@ -10,9 +10,9 @@ from flask import abort, Flask, make_response, render_template, Response, redire
 app = Flask(__name__)
 redis_client = StrictRedis(host='localhost', port=6379, db=0)
 
-naver_client_id = 'bop3C73HErShvaWh5AT2'
-naver_client_secret = '6IdFnhihKH'
-naver_redirect_uri = 'http://localhost:8000/auth'
+naver_client_id = 'D5qE5r_gW9ImHzTarDkD'
+naver_client_secret = 'OVy795S8M5'
+naver_redirect_uri = 'http://localhost:8000/memo/memo/auth'
 '''
   본인 app 의 것으로 교체할 것.
   여기 지정된 url 이 http://localhost:8000/auth 처럼 /auth 인 경우
@@ -63,7 +63,7 @@ def onLogin():
 # 아래는 Redirect URI 로 등록된 경우 호출된다.
 # 만일 본인의 Redirect URI 가 http://localhost:8000/auth 의 경우처럼 /auth 대신 다른 것을
 # 사용한다면 아래 @app.route('/auth') 의 내용을 그 URL 로 바꿀 것
-@app.route('/auth')
+@app.route('/memo/auth')
 def onOAuthAuthorizationCodeRedirected():
     # TODO: 아래 1 ~ 4 를 채워 넣으시오.
 
