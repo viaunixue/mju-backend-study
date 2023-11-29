@@ -9,7 +9,7 @@
 
 1️⃣ &nbsp; [채팅 서버 만들기](https://github.com/almond0115/mju-backend-dev/blob/main/project/chat_server/server/README.md)
 
-2️⃣ &nbsp; [메모장 서비스 만들기](https://github.com/almond0115/mju-backend-dev/blob/main/project/memo_server/readme.md)
+2️⃣ &nbsp; [메모장 서비스 만들기](https://github.com/almond0115/mju-backend-dev/blob/main/project/memo_server/memo_service.md)
 
 ## 📝 과제 정리
 
@@ -34,8 +34,6 @@
 * [[11/27] RPC](https://github.com/almond0115/mju-backend-dev/blob/main/study/rpc.md) 
 
 * [[11/27] Scaling](https://github.com/almond0115/mju-backend-dev/blob/main/study/scaling.md)
-
-* [[11/25] Memo Service 배포 실습](https://github.com/almond0115/mju-backend-dev/blob/main/project/memo_server/elb.md)
 
 * [[11/20] Load Balancer](https://github.com/almond0115/mju-backend-dev/blob/main/study/load_balancer.md)
 
