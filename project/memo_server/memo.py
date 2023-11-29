@@ -38,7 +38,11 @@ def home():
     ####################################################
     # TODO: 아래 부분을 채워 넣으시오.
     # userId 로부터 DB 에서 사용자 이름을 얻어오는 코드를 여기에 작성해야 함
-    name = redis_client.get(userId).decode('utf8') if userId else None
+    name = None
+    if(userId):
+        name_value = redis_client.get(userId)
+            if name_value: 
+                name = name_value.decode('utf8')
     ####################################################
 
     # 이제 클라에게 전송해 줄 index.html 을 생성한다.
