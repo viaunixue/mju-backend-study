@@ -113,12 +113,14 @@ yaml 파일을 통해 port 번호를 기재하고 다시 서버를 띄우면 다
 ## `Test #10`
 ### Custom Object 반환
 
-새로 추가 할 클래스
+#### 새로 추가 할 클래스
+
 ![sprintoot_15](/asset/img/sprintoot_15.png)
 
 <br>
 
-BlogController 의 `getArticle()` 수정
+#### BlogController 의 `getArticle()` 수정
+
 ![springboot_16](/asset/img/springboot_16.png)
 
 > GET /article/1 의 숫자 부분은 article 번호를 의도했습니다.
@@ -196,6 +198,8 @@ $ curl -X POST -H "Content-Type: application/json; charset=utf-8" --data "{\"tit
 ### Response Status Code 지정
 
 ![springboot_25](/asset/img/springboot_25.png)
+
+<br>
 
 ```
 error 1 : HttpServletResponse 객체의 메서드를 이용 (매개변수 위치 관계 X)
@@ -289,12 +293,12 @@ mustache 파일의 name 위치에 model을 통해 주입한 MJU 가 정상 출�
 ## `Test #18`
 ### @Autowired
 
-@Autowired 는 해당 타입의 bean 을 찾아서 연결하라는 의미이다.
+@Autowired 는 해당 타입의 bean 을 찾아서 연결하라는 의미입니다.
 
-* Bean 은 Spring Container 에 의해 관리되며, singleton (= 오직 한 객체만 존재) 임
+* Bean 은 Spring Container 에 의해 관리되며, singleton (= 오직 한 객체만 존재) 입니다.
 
 * @Autowired 로 지정하면 의존성을 명시하는 것이고, <br>
-Dependency Injection 으로 해당 객체 값이 singleton 으로 채워짐 <br>
+Dependency Injection 으로 해당 객체 값이 singleton 으로 채워집니다. <br>
 (**`주의! 나를 위해 새로 만들어 주는 것이 아니라 프로세스에 하나 뿐인 공유 객체임`**) 
 
 <br>

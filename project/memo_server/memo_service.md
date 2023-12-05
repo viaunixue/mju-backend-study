@@ -45,7 +45,7 @@ Redis, MongoDB, MySQL 포트가 열려 있습니다.
 * [X] 네이버 OAuth 가 제대로 구현
 * [X] `GET /memo` 가 제대로 구현
 * [X] `POST /memo` 가 제대로 구현
-* [ ] 유저를 바꿔서 사용하는 경우 사용자 구분
+* [X] 유저를 바꿔서 사용하는 경우 사용자 구분
 * [X] 개발 서버 2개, DB 서버 1개로 가상 서버 총 3개 생성
 * [X] 로드 밸런싱 인스턴스 대상 그룹 생성 후 개발 서버 대상 등록
 * [X] 로드 밸런싱 로드밸런서 생성
@@ -53,7 +53,7 @@ Redis, MongoDB, MySQL 포트가 열려 있습니다.
 
 ### 기본 아키텍처 구상도
 
-![memo_proj_11](/asset/img/memo_proj_12.png)
+![memo_proj_13](/asset/img/memo_proj_14.png)
 
 ### 개발 서버 2개, DB 서버 1개로 가상 서버 총 3개 생성
 
