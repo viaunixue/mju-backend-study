@@ -27,7 +27,11 @@
 
 * LAB-8 : [Framework - Python Flask](https://github.com/almond0115/mju-backend-dev/blob/main/lab8/README.md)
 
+* LAB-9 : [Blog- Java Spring Boot](https://github.com/almond0115/mju-backend-dev/blob/main/lab9/README.md)
+
 ## 🤔 공부 기록 
+
+* [[12/4] Java Sprint Boot](https://github.com/almond0115/mju-backend-dev/blob/main/study/spring_boot.md)
 
 * [[11/28] Message Queue](https://github.com/almond0115/mju-backend-dev/blob/main/study/message_queue.md)
 
