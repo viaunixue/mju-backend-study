@@ -210,3 +210,100 @@
    <summary> <a> &nbsp; User Level 쓰레드 vs Kernel Level 쓰레드 </a> </summary>
    <img src = "asset/img/drawing/week_6/UserKernelLevel.png">
 </details>
+
+<details>
+   <summary> <a> &nbsp; Authorization Code Grant 방식 흐름도 </a> </summary>
+   <img src = "asset/img/drawing/week_7/authorization_1.png">
+</details>
+
+<details>
+   <summary> <a> &nbsp; Authorization Code Grant 방식 흐름도(프론트, 백엔드 구분) </a> </summary>
+   <img src = "asset/img/drawing/week_7/authorization_2.png">
+</details>
+
+
+<details>
+   <summary> <a> &nbsp; Authorization Code Grant 방식 흐름도(Access Token 만료되는 경우) </a> </summary>
+   <img src = "asset/img/drawing/week_7/authorization_3.png">
+</details>
+
+<details>
+   <summary> <a> &nbsp; 서버 구현 방식 가이드 라인 </a> </summary>
+   <img src = "asset/img/drawing/week_8/server_guide.png">
+</details>
+
+<details>
+   <summary> <a> &nbsp; CDN 동작 </a> </summary>
+   <img src = "asset/img/drawing/week_8/cdn.png">
+</details>
+
+<details>
+   <summary> <a> &nbsp; 웹 서버 구조 </a> </summary>
+   <img src = "asset/img/drawing/week_8/server_structure.png">
+</details>
+
+<details>
+   <summary> <a> &nbsp; SSH -L / -R 옵션 </a> </summary>
+   <img src = "asset/img/drawing/week_9/ssh.png">
+</details>
+
+<details>
+   <summary> <a> &nbsp; Library vs Framework </a> </summary>
+   <img src = "asset/img/drawing/week_9/framework.png">
+</details>
+
+<details>
+   <summary> <a> &nbsp; Load Balancer </a> </summary>
+   <img src = "asset/img/drawing/week_10/load_balancer_1.png">
+   <img src = "asset/img/drawing/week_10/load_balancer_2.png">
+</details>
+
+<details> 
+   <summary> <a> &nbsp; Scale-up & Scale-out </a> </summary>
+   <img src = "asset/img/drawing/week_10/scale.png">
+</details>
+
+<details>
+   <summary> <a> &nbsp; Library vs Framework </a> </summary>
+   <img src = "asset/img/drawing/week_10/scale.png">
+</details>
+
+<details>
+   <summary> <a> &nbsp; Server Network Error </a> </summary>
+   <img src = "asset/img/drawing/week_10/server_fail.png">
+</details>
+
+<details>
+   <summary> <a> &nbsp; RPC Logic </a> </summary>
+   <img src = "asset/img/drawing/week_11/rpc.png">
+</details>
+
+<details>
+   <summary> <a> &nbsp; Kafka의 Append-Only Log </a> </summary>
+   <img src = "asset/img/drawing/week_11/kafka.png">
+</details>
+
+<details>
+   <summary> <a> &nbsp; Message Queue </a> </summary>
+   <img src = "asset/img/drawing/week_12/message_queue.png">
+</details>
+
+<details>
+   <summary> <a> &nbsp; Message Queue를 통한 통신 패턴 구현 </a> </summary>
+   <img src = "asset/img/drawing/week_12/message_queue_pattern.png">
+</details>
+
+<details>
+   <summary> <a> &nbsp; Spring MVC (Model-View-Controller) </a> </summary>
+   <img src = "asset/img/drawing/week_13/spring_mvc.png">
+</details>
+
+<details>
+   <summary> <a> &nbsp; Logging과 일반 표준 출력 함수 비교 예시 </a> </summary>
+   <img src = "asset/img/drawing/week_13/logging.png">
+</details>
+
+<details>
+   <summary> <a> &nbsp; 계층형 아키텍처로서의 Spring </a> </summary>
+   <img src = "asset/img/drawing/week_13/spring_structure.png">
+</details>
